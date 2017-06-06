@@ -1,0 +1,51 @@
+digraph "JGFCryptBenchSizeA" {
+    label="JGFCryptBenchSizeA";
+    rankdir=LR;
+    "<JGFCryptBenchSizeA: void main(java.lang.String[])>" [color=turquoise,style=filled,];
+    "<crypt.JGFCryptBench: void JGFrun(int)>" [color=turquoise,style=filled,color=turquoise,style=filled,];
+    "<JGFCryptBenchSizeA: void main(java.lang.String[])>"->"<crypt.JGFCryptBench: void JGFrun(int)>" [style=bold,];
+    "<crypt.JGFCryptBench: void JGFtidyup()>"
+    "<crypt.JGFCryptBench: void JGFrun(int)>"->"<crypt.JGFCryptBench: void JGFtidyup()>";
+    "<crypt.IDEATest: void freeTestData()>"
+    "<crypt.JGFCryptBench: void JGFtidyup()>"->"<crypt.IDEATest: void freeTestData()>";
+    "<crypt.JGFCryptBench: void JGFvalidate()>"
+    "<crypt.JGFCryptBench: void JGFrun(int)>"->"<crypt.JGFCryptBench: void JGFvalidate()>";
+    "<crypt.JGFCryptBench: void JGFkernel()>"
+    "<crypt.JGFCryptBench: void JGFrun(int)>"->"<crypt.JGFCryptBench: void JGFkernel()>";
+    "<crypt.IDEATest: void Do()>" [color=yellow,style=filled,];
+    "<crypt.JGFCryptBench: void JGFkernel()>"->"<crypt.IDEATest: void Do()>";
+    "<crypt.IDEARunner: void <init>(int,byte[],byte[],int[])>"
+    "<crypt.IDEATest: void Do()>"->"<crypt.IDEARunner: void <init>(int,byte[],byte[],int[])>";
+    "<jgfutil.JGFInstrumentor: void startTimer(java.lang.String)>"
+    "<crypt.IDEATest: void Do()>"->"<jgfutil.JGFInstrumentor: void startTimer(java.lang.String)>";
+    "<jgfutil.JGFInstrumentor: void stopTimer(java.lang.String)>"
+    "<crypt.IDEATest: void Do()>"->"<jgfutil.JGFInstrumentor: void stopTimer(java.lang.String)>";
+    "<crypt.JGFCryptBench: void JGFinitialise()>" [color=turquoise,style=filled,color=turquoise,style=filled,];
+    "<crypt.JGFCryptBench: void JGFrun(int)>"->"<crypt.JGFCryptBench: void JGFinitialise()>" [style=bold,];
+    "<crypt.IDEATest: void buildTestData()>" [color=turquoise,style=filled,color=turquoise,style=filled,];
+    "<crypt.JGFCryptBench: void JGFinitialise()>"->"<crypt.IDEATest: void buildTestData()>" [style=bold,];
+    "<crypt.IDEATest: void calcDecryptKey()>" [color=turquoise,style=filled,];
+    "<crypt.IDEATest: void buildTestData()>"->"<crypt.IDEATest: void calcDecryptKey()>" [style=bold,];
+    "<crypt.IDEATest: int inv(int)>"
+    "<crypt.IDEATest: void calcDecryptKey()>"->"<crypt.IDEATest: int inv(int)>";
+    "<crypt.IDEATest: void calcEncryptKey()>"
+    "<crypt.IDEATest: void buildTestData()>"->"<crypt.IDEATest: void calcEncryptKey()>";
+    "<crypt.JGFCryptBench: void JGFsetsize(int)>"
+    "<crypt.JGFCryptBench: void JGFrun(int)>"->"<crypt.JGFCryptBench: void JGFsetsize(int)>";
+    "<jgfutil.JGFInstrumentor: void addTimer(java.lang.String,java.lang.String,int)>"
+    "<crypt.JGFCryptBench: void JGFrun(int)>"->"<jgfutil.JGFInstrumentor: void addTimer(java.lang.String,java.lang.String,int)>";
+    "<jgfutil.JGFTimer: void <init>(java.lang.String,java.lang.String,int)>"
+    "<jgfutil.JGFInstrumentor: void addTimer(java.lang.String,java.lang.String,int)>"->"<jgfutil.JGFTimer: void <init>(java.lang.String,java.lang.String,int)>";
+    "<jgfutil.JGFTimer: void reset()>"
+    "<jgfutil.JGFTimer: void <init>(java.lang.String,java.lang.String,int)>"->"<jgfutil.JGFTimer: void reset()>";
+    "<jgfutil.JGFInstrumentor: void addOpsToTimer(java.lang.String,double)>"
+    "<crypt.JGFCryptBench: void JGFrun(int)>"->"<jgfutil.JGFInstrumentor: void addOpsToTimer(java.lang.String,double)>";
+    "<jgfutil.JGFInstrumentor: void printTimer(java.lang.String)>"
+    "<crypt.JGFCryptBench: void JGFrun(int)>"->"<jgfutil.JGFInstrumentor: void printTimer(java.lang.String)>";
+    "<crypt.JGFCryptBench: void <init>(int)>"
+    "<JGFCryptBenchSizeA: void main(java.lang.String[])>"->"<crypt.JGFCryptBench: void <init>(int)>";
+    "<crypt.IDEATest: void <init>()>"
+    "<crypt.JGFCryptBench: void <init>(int)>"->"<crypt.IDEATest: void <init>()>";
+    "<jgfutil.JGFInstrumentor: void printHeader(int,int,int)>"
+    "<JGFCryptBenchSizeA: void main(java.lang.String[])>"->"<jgfutil.JGFInstrumentor: void printHeader(int,int,int)>";
+}

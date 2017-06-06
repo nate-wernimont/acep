@@ -47,6 +47,10 @@ public class Benchmark {
 		config(document);
 	}
 
+	/**
+	 * Reads all of the config documents properties
+	 * @param xml A xml document
+	 */
 	void config(Document xml) {
 		// get the root element
 		Element benchmark = xml.getDocumentElement();
@@ -56,24 +60,26 @@ public class Benchmark {
 		_method = getTagValue("method", benchmark);
 		Node nNode = benchmark.getElementsByTagName("processdir").item(0);
 		if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-			Element eElement = (Element) nNode;
-			NodeList dirs = benchmark.getElementsByTagName("dir");
-			for (int i = 0; i < dirs.getLength(); i++) {
-				String child = dirs.item(i).getChildNodes().item(0)
-						.getNodeValue();
-				_processdir.add(child);
-			}
+//			Element eElement = (Element) nNode;
+//			NodeList dirs = benchmark.getElementsByTagName("dir");
+//			for (int i = 0; i < dirs.getLength(); i++) {
+//				String child = dirs.item(i).getChildNodes().item(0)
+//						.getNodeValue();
+//				_processdir.add(child);
+//			}
+			_processdir.addAll(getAllTagValues("dir", benchmark));
 		}
 
 		nNode = benchmark.getElementsByTagName("includes").item(0);
 		if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-			Element eElement = (Element) nNode;
-			NodeList incs = benchmark.getElementsByTagName("inc");
-			for (int i = 0; i < incs.getLength(); i++) {
-				String child = incs.item(i).getChildNodes().item(0)
-						.getNodeValue();
-				_includes.add(child);
-			}
+//			Element eElement = (Element) nNode;
+//			NodeList incs = benchmark.getElementsByTagName("inc");
+//			for (int i = 0; i < incs.getLength(); i++) {
+//				String child = incs.item(i).getChildNodes().item(0)
+//						.getNodeValue();
+//				_includes.add(child);
+//			}
+			_includes.addAll(getAllTagValues("inc", benchmark));
 		}
 		
 		_LIB = getTagValue("lib", benchmark);
@@ -82,17 +88,35 @@ public class Benchmark {
 		nNode = benchmark.getElementsByTagName("jars").item(0);
 		if (nNode != null) {
 			if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-				Element eElement = (Element) nNode;
-				NodeList jars = benchmark.getElementsByTagName("jar");
-				for (int i = 0; i < jars.getLength(); i++) {
-					String child = jars.item(i).getChildNodes().item(0)
-							.getNodeValue();
-					_lib_jars.add(child);
-				}
+//				Element eElement = (Element) nNode;
+//				NodeList jars = benchmark.getElementsByTagName("jar");
+//				for (int i = 0; i < jars.getLength(); i++) {
+//					String child = jars.item(i).getChildNodes().item(0)
+//							.getNodeValue();
+//					_lib_jars.add(child);
+//				}
+				_lib_jars.addAll(getAllTagValues("jar", benchmark));
 			}
 		}
 	}
+	
+	/**
+	 * @author nwernimont
+	 * @param eElement The document being searched
+	 * @param sTag The tag to search for
+	 * @returns a list of the the values of the given tags
+	 *///There can be more than one value for that tag
+	private List<String> getAllTagValues(String sTag, Element eElement){
+		NodeList nList = eElement.getElementsByTagName(sTag);
+		List<String> result = new ArrayList<String>();
+		for(int i = 0; i < nList.getLength(); i++){
+			String child = nList.item(i).getChildNodes().item(0).getNodeValue();
+			result.add(child);
+		}
+		return result;
+	}
 
+	//This is if there is expected to be only one value for that tag
 	private static String getTagValue(String sTag, Element eElement) {
 		if (eElement.getElementsByTagName(sTag).item(0) == null)
 			return "";
@@ -146,7 +170,7 @@ public class Benchmark {
 		// have to be considered for the analysis
 		Options.v().set_process_dir(_processdir);
 		// Soot classpath should have path to JRE (rt.jar, jce.jar),
-		// specific bechmark related jar file locations and,
+		// specific benchmark related jar file locations, and
 		// processdir paths
 		construct_class_path();
 		System.out.println(_classpath);
@@ -159,7 +183,7 @@ public class Benchmark {
 		Options.v().set_include(_includes);
 		// Add excludes,
 		List<String> _excludes = new ArrayList<String>();
-		_excludes.add("java");
+		_excludes.add("java");//TODO: excludes
 		Options.v().set_exclude(_excludes);
 		// Mention the starting point and the main method
 		SootClass c = Scene.v().loadClassAndSupport(_class);

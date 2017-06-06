@@ -319,7 +319,8 @@ public class StaticProfilePassImpl implements StaticProfilePass {
 				inStack.remove(current);
 				
 				// Special check to make sure looping exit
-				if (current.toString().equals(root.toString()))	return;
+				if (current.toString().equals(root.toString()))	
+					return;
 
 			} else {
 				// Found a new function.
