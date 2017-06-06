@@ -9,7 +9,7 @@
                 <inc>crypt</inc>
         </includes>
         <lib>./crypt/lib</lib>	<!-- lib folder location -->
-        <jre>/Library/Java/JavaVirtualMachines/1.6.0_29-b11-397.jdk/Contents/Home/jre/lib</jre>	<!-- jre location, basically this location needs to contain rt.jar and jce.jar -->
+        <jre>/Library/Java/JavaVirtualMachines/1.6.0_37-b06-434.jdk/Contents/Home/lib</jre>	<!-- jre location, basically this location needs to contain rt.jar and jce.jar -->
         <jars>
                 <jar>JG.jar</jar>	<!-- program jar file containing all class files to be analyzed -->
         </jars>

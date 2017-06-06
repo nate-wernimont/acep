@@ -1,0 +1,57 @@
+digraph "JGFLUFactBenchSizeA" {
+    label="JGFLUFactBenchSizeA";
+    rankdir=LR;
+    "<JGFLUFactBenchSizeA: void main(java.lang.String[])>" [color=turquoise,style=filled,];
+    "<lufact.JGFLUFactBench: void JGFrun(int)>" [color=turquoise,style=filled,color=turquoise,style=filled,color=turquoise,style=filled,];
+    "<JGFLUFactBenchSizeA: void main(java.lang.String[])>"->"<lufact.JGFLUFactBench: void JGFrun(int)>" [style=bold,];
+    "<lufact.JGFLUFactBench: void JGFtidyup()>"
+    "<lufact.JGFLUFactBench: void JGFrun(int)>"->"<lufact.JGFLUFactBench: void JGFtidyup()>";
+    "<lufact.JGFLUFactBench: void JGFvalidate()>" [color=turquoise,style=filled,];
+    "<lufact.JGFLUFactBench: void JGFrun(int)>"->"<lufact.JGFLUFactBench: void JGFvalidate()>" [style=bold,];
+    "<lufact.Linpack: double epslon(double)>"
+    "<lufact.JGFLUFactBench: void JGFvalidate()>"->"<lufact.Linpack: double epslon(double)>";
+    "<lufact.Linpack: double abs(double)>"
+    "<lufact.Linpack: double epslon(double)>"->"<lufact.Linpack: double abs(double)>";
+    "<lufact.Linpack: void dmxpy(int,double[],int,int,double[],double[][])>"
+    "<lufact.JGFLUFactBench: void JGFvalidate()>"->"<lufact.Linpack: void dmxpy(int,double[],int,int,double[],double[][])>";
+    "<lufact.Linpack: double matgen(double[][],int,int,double[])>"
+    "<lufact.JGFLUFactBench: void JGFvalidate()>"->"<lufact.Linpack: double matgen(double[][],int,int,double[])>";
+    "<lufact.JGFLUFactBench: void JGFkernel()>" [color=turquoise,style=filled,color=turquoise,style=filled,];
+    "<lufact.JGFLUFactBench: void JGFrun(int)>"->"<lufact.JGFLUFactBench: void JGFkernel()>" [style=bold,];
+    "<lufact.Linpack: void dgesl(double[][],int,int,int[],double[],int)>" [color=turquoise,style=filled,];
+    "<lufact.JGFLUFactBench: void JGFkernel()>"->"<lufact.Linpack: void dgesl(double[][],int,int,int[],double[],int)>" [style=bold,];
+    "<lufact.Linpack: void daxpy(int,double,double[],int,int,double[],int,int)>"
+    "<lufact.Linpack: void dgesl(double[][],int,int,int[],double[],int)>"->"<lufact.Linpack: void daxpy(int,double,double[],int,int,double[],int,int)>";
+    "<lufact.Linpack: double ddot(int,double[],int,int,double[],int,int)>"
+    "<lufact.Linpack: void dgesl(double[][],int,int,int[],double[],int)>"->"<lufact.Linpack: double ddot(int,double[],int,int,double[],int,int)>";
+    "<lufact.TournamentBarrier: void <init>(int)>"
+    "<lufact.JGFLUFactBench: void JGFkernel()>"->"<lufact.TournamentBarrier: void <init>(int)>";
+    "<lufact.Barrier: void <init>(int)>"
+    "<lufact.TournamentBarrier: void <init>(int)>"->"<lufact.Barrier: void <init>(int)>";
+    "<lufact.LinpackRunner: void <init>(int,double[][],int,int,int[],lufact.Barrier)>"
+    "<lufact.JGFLUFactBench: void JGFkernel()>"->"<lufact.LinpackRunner: void <init>(int,double[][],int,int,int[],lufact.Barrier)>";
+    "<jgfutil.JGFInstrumentor: void startTimer(java.lang.String)>"
+    "<lufact.JGFLUFactBench: void JGFkernel()>"->"<jgfutil.JGFInstrumentor: void startTimer(java.lang.String)>";
+    "<jgfutil.JGFInstrumentor: void stopTimer(java.lang.String)>"
+    "<lufact.JGFLUFactBench: void JGFkernel()>"->"<jgfutil.JGFInstrumentor: void stopTimer(java.lang.String)>";
+    "<lufact.JGFLUFactBench: void JGFinitialise()>"
+    "<lufact.JGFLUFactBench: void JGFrun(int)>"->"<lufact.JGFLUFactBench: void JGFinitialise()>";
+    "<lufact.JGFLUFactBench: void JGFsetsize(int)>"
+    "<lufact.JGFLUFactBench: void JGFrun(int)>"->"<lufact.JGFLUFactBench: void JGFsetsize(int)>";
+    "<jgfutil.JGFInstrumentor: void addTimer(java.lang.String,java.lang.String,int)>"
+    "<lufact.JGFLUFactBench: void JGFrun(int)>"->"<jgfutil.JGFInstrumentor: void addTimer(java.lang.String,java.lang.String,int)>";
+    "<jgfutil.JGFTimer: void <init>(java.lang.String,java.lang.String,int)>"
+    "<jgfutil.JGFInstrumentor: void addTimer(java.lang.String,java.lang.String,int)>"->"<jgfutil.JGFTimer: void <init>(java.lang.String,java.lang.String,int)>";
+    "<jgfutil.JGFTimer: void reset()>"
+    "<jgfutil.JGFTimer: void <init>(java.lang.String,java.lang.String,int)>"->"<jgfutil.JGFTimer: void reset()>";
+    "<jgfutil.JGFInstrumentor: void addOpsToTimer(java.lang.String,double)>"
+    "<lufact.JGFLUFactBench: void JGFrun(int)>"->"<jgfutil.JGFInstrumentor: void addOpsToTimer(java.lang.String,double)>";
+    "<jgfutil.JGFInstrumentor: void printTimer(java.lang.String)>"
+    "<lufact.JGFLUFactBench: void JGFrun(int)>"->"<jgfutil.JGFInstrumentor: void printTimer(java.lang.String)>";
+    "<lufact.JGFLUFactBench: void <init>(int)>"
+    "<JGFLUFactBenchSizeA: void main(java.lang.String[])>"->"<lufact.JGFLUFactBench: void <init>(int)>";
+    "<lufact.Linpack: void <init>()>"
+    "<lufact.JGFLUFactBench: void <init>(int)>"->"<lufact.Linpack: void <init>()>";
+    "<jgfutil.JGFInstrumentor: void printHeader(int,int,int)>"
+    "<JGFLUFactBenchSizeA: void main(java.lang.String[])>"->"<jgfutil.JGFInstrumentor: void printHeader(int,int,int)>";
+}

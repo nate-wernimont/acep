@@ -439,6 +439,7 @@ implements BlockEdgeFrequencyPass {
 
 		}
 		// Check if frequency matches 1.0 (with a 0.01 slack).
+		System.out.println(freq);
 		return (freq > 0.99 && freq < 1.01);
 	}
 }

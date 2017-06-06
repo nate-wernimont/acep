@@ -1,0 +1,12 @@
+Note: my lines might be a little off.
+
+In config.xml, why is there both the dir field and the lib field? It explicitly says that the dir field should contain config.xml and lib, so why also define where lib is if we already know?
+There are a few objects that are created and then never actually used. Why is this? Example on line 55 of Benchmark.java.
+Clarification: Points-to analysis would be useful for calculating dependency, correct?
+Didn't you mention that somebody could put excludes in the config file yesterday? Currently, the program only adds "java" to the excludes as a default
+Benchmark.java line 192, (at the TODO:) what is ppgp?
+Why are various lines commented out? Why not delete them?
+LG_WORDSIZE = AddrJVM_32_or_64.equals("32") ? 2 : 3; What does this mean? I'm unfamiliar with the boolean ? num : num syntax. Does it mean that the value is 2 if true and 3 if false?
+What is a 'back edge'? Line 235 in StaticProfilePass.java.
+I get a lot of integrity problems... the sum of the exiting edge frequencies very commonly don't equal one.
+[EXIT] preprocess at line 334 never outputs because the special check at line 322 always exits preprocess at the end. Is that desired behavior?
