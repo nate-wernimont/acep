@@ -539,7 +539,7 @@ public class Analysis {
 
 		HashMap<Block, Double> blockFrequencies = null;
 		// Get block frequency map
-		if (_staticProfile != null)
+		if (_staticProfile != null)//Wouldn't this be redundant? If it is null, it should throw an error 2 commands up
 			blockFrequencies = _staticProfile.getBlockFrequencyMap(method);
 		// Baf (bytecode) graph construction
 		BafBody body = new BafBody(method.retrieveActiveBody(), (Map) null);
@@ -578,7 +578,7 @@ public class Analysis {
 				+ "=========================\n");*/
 
 		long methodStmtCount = 0, methodBlockCount = 0;
-		// Traking how many method calls and how many of which are library calls
+		// Tracking how many method calls and how many of which are library calls
 		int invokes = 0, libraryCalls = 0;
 		while (bafBlockIter.hasNext() && srcBlockIter.hasNext()) {
 			Block bafBlock = bafBlockIter.next();
@@ -723,7 +723,7 @@ public class Analysis {
 		if (invokes > 0)
 			System.out
 					.println("Total number of method invocations: " + invokes);
-		System.out.println("Invoked methods: " + invokedMethods.size());
+		System.out.println("Invoked methods: " + invokedMethods.size());//Has to be 0
 		for (String invoked : invokedMethods) {
 			System.out.println(invoked);
 		}

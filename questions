@@ -10,3 +10,4 @@ LG_WORDSIZE = AddrJVM_32_or_64.equals("32") ? 2 : 3; What does this mean? I'm un
 What is a 'back edge'? Line 235 in StaticProfilePass.java.
 I get a lot of integrity problems... the sum of the exiting edge frequencies very commonly don't equal one.
 [EXIT] preprocess at line 334 never outputs because the special check at line 322 always exits preprocess at the end. Is that desired behavior?
+Analysis.java, line 701. Why is it blockCycles being put in and not blockTime?
