@@ -38,7 +38,7 @@ public class PathEnumerator {
 	/**
 	 * Find all of the paths through the given class of this PathEnumerator
 	 */
-	public void findPaths(){
+	public void findMethodPaths(){
 		for(Iterator<SootMethod> methIter = _class.methodIterator(); methIter.hasNext();){
 			List<BlockPath> methodPaths = new ArrayList<BlockPath>();
 			SootMethod method = methIter.next();
