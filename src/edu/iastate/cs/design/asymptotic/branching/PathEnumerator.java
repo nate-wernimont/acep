@@ -2,8 +2,10 @@ package edu.iastate.cs.design.asymptotic.branching;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
 
 import edu.iastate.cs.design.asymptotic.datastructures.Path;
@@ -43,40 +45,41 @@ public class PathEnumerator {
 			List<BlockPath> methodPaths = new ArrayList<BlockPath>();
 			SootMethod method = methIter.next();
 			Stack<Block> blockSt = new Stack<>();
-			Body b = null;
-			if(method.hasActiveBody())
-				b = method.getActiveBody();
+			Body b = method.retrieveActiveBody();
 			BlockGraph bg = new BriefBlockGraph(b);
 			Block firstBlock = bg.getBlocks().get(0);
 			blockSt.push(firstBlock);
-			
 			//Generates all of the possible paths through this method.
-			while(!blockSt.isEmpty()){
-				DFS(blockSt, methodPaths);
-			}
-			
+			DFS(blockSt, methodPaths);
+			System.out.println("Finished method: "+method.toString());
 			_map.put(method, methodPaths);
 		}
 	}
 	
 	/**
-	 * Generate all paths through a method given a stack containing the first block of the method.
+	 * Generate all acyclic paths through a method given a stack containing the first block of the method.
 	 * @param blockStack A stack containing the first block of the method
 	 * @param masterPaths A list of all of the paths through the method
 	 */
-	public void DFS(Stack<Block> blockStack, List<BlockPath> masterPaths){
+	private void DFS(Stack<Block> blockStack, List<BlockPath> masterPaths){
 		Block block = blockStack.peek();
 		List<Block> succs = block.getSuccs();
-		if(succs.isEmpty()){
+		if(succs.isEmpty()){//It is an exit node
 			BlockPath pathToAdd = new BlockPath(blockStack);
 			masterPaths.add(pathToAdd);
-			blockStack.pop();
 			return;
 		}
-		for(Block succ : block.getSuccs()){
-			blockStack.push(succ);
-			DFS(blockStack, masterPaths);
+		for(Block succ : succs){
+			if(!blockStack.contains(succ)){
+				blockStack.push(succ);
+				DFS(blockStack, masterPaths);
+				blockStack.pop();
+			}
 		}
+	}
+	
+	public HashMap<SootMethod, List<BlockPath>> getMap(){
+		return _map;
 	}
 	
 }

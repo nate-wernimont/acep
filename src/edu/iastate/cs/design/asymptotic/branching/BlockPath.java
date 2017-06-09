@@ -31,8 +31,17 @@ public class BlockPath {
 	
 	public BlockPath(Stack<Block> st){
 		this();
-		while(!st.isEmpty()){
-			this.addToEnd(st.pop());
+		Stack<Block> stack = new Stack<Block>();
+		stack = (Stack<Block>) st.clone();
+		while(!stack.isEmpty()){
+			this.addToStart(stack.pop());
+		}
+	}
+	
+	public BlockPath(List<Block> li){
+		this();
+		for(Block b: li){
+			this.addToEnd(b);
 		}
 	}
 	
@@ -43,12 +52,20 @@ public class BlockPath {
 		tail.prev = root;
 	}
 	
-	public void addToEnd(Block b){
+	public void addToStart(Block b){
+		addBefore(b, root.next);
+	}
+	
+	private void addBefore(Block b, Node n){
 		Node toAdd = new Node(b);
-		toAdd.next = tail;
-		toAdd.prev = tail.prev;
-		tail.prev = toAdd;
+		toAdd.next = n;
+		toAdd.prev = n.prev;
+		n.prev = toAdd;
 		toAdd.prev.next = toAdd;
+	}
+	
+	public void addToEnd(Block b){
+		addBefore(b, tail);
 	}
 	
 	public List<Block> toList(){
@@ -59,6 +76,16 @@ public class BlockPath {
 			curr = curr.next;
 		}
 		return result;
+	}
+	
+	public String toString(){
+		String result = "Start ->";
+		Node curr = root.next;
+		while(curr.next != null){
+			result += curr.body.toShortString() + " ->";
+			curr = curr.next;
+		}
+		return result += " End";
 	}
 	
 	

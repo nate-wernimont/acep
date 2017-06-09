@@ -51,14 +51,14 @@ import soot.toolkits.scalar.UnitValueBoxPair;
 public class BlockTesting {
 
 	public static void main(String[] args){
-		String _classpath = "C:/Users/Nate/Desktop/Iowa State/Spring 2017/COM S 228/edu.iastate.cs228.hw4/bin";
+		String _classpath = "/Library/Java/JavaVirtualMachines/1.6.0_37-b06-434.jdk/Contents/Home/lib/rt.jar:/Library/Java/JavaVirtualMachines/1.6.0_37-b06-434.jdk/Contents/Home/lib/jce.jar:/Users/natemw/Documents/workspace/Test/bin";
 
 		Options.v().set_keep_line_number(true);
 		Options.v().set_soot_classpath(_classpath);
+		System.out.println(Options.v().soot_classpath());
 		Scene.v().loadNecessaryClasses();
 		Options.v().set_whole_program(true);
-		Scene.v().addBasicClass("edu.iastate.cs228.hw4.Dictionary",SootClass.SIGNATURES);
-		SootClass sClass = Scene.v().loadClassAndSupport("edu.iastate.cs228.hw4.Dictionary");
+		SootClass sClass = Scene.v().forceResolve("Test.alg", SootClass.BODIES);
 		sClass.setApplicationClass();
 		
 		Iterator<SootMethod> methIter = sClass.methodIterator();
@@ -66,7 +66,7 @@ public class BlockTesting {
 			SootMethod meth = methIter.next();
 			System.out.println("==================Evaluating: "
 					+ meth.toString() + "=====================");
-			Body b = meth.getActiveBody();
+			Body b = meth.retrieveActiveBody();
 			BlockGraph bg = new BriefBlockGraph(b);
 			System.out.println("=======Blocks=======");
 			for(Block block: bg.getBlocks()){
@@ -74,14 +74,17 @@ public class BlockTesting {
 				System.out.println(block.toString());
 			}
 			
-			UnitGraph ug = new BriefUnitGraph(b);
-			System.out.println("======Units======");
-			Iterator<Unit> unitIter = ug.iterator();
-			while(unitIter.hasNext()){
-				Unit unit = unitIter.next();
-				System.out.println("===Unit===");
-				System.out.println(unit.toString());
-			}
+//			UnitGraph ug = new BriefUnitGraph(b);
+//			System.out.println("======Units======");
+//			Iterator<Unit> unitIter = ug.iterator();
+//			while(unitIter.hasNext()){
+//				Unit unit = unitIter.next();
+//				System.out.println("===Unit===");
+//				System.out.println(unit.toString());
+//				System.out.println("Goto: "+unit.hasTag("goto"));
+//				System.out.println("Branches: "+unit.branches());
+//				System.out.println("UnitBoxes: "+unit.getUnitBoxes());
+//			}
 			
 		}
 		
