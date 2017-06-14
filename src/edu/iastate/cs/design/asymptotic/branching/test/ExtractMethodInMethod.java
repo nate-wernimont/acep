@@ -1,21 +1,15 @@
 package edu.iastate.cs.design.asymptotic.branching.test;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import edu.iastate.cs.design.asymptotic.branching.BlockPath;
+import edu.iastate.cs.design.asymptotic.branching.Path;
 import edu.iastate.cs.design.asymptotic.branching.PathEnumerator;
 import soot.Scene;
 import soot.SootClass;
 import soot.SootMethod;
 import soot.Unit;
-import soot.ValueBox;
-import soot.jimple.InvokeStmt;
-import soot.jimple.Stmt;
-import soot.jimple.internal.InvokeExprBox;
-import soot.jimple.internal.JInvokeStmt;
 import soot.options.Options;
 import soot.toolkits.graph.Block;
 
@@ -34,37 +28,43 @@ public class ExtractMethodInMethod {
 		
 		
 		PathEnumerator pathE = new PathEnumerator(sClass);
-		pathE.findMethodPaths();
-		HashMap<SootMethod, List<BlockPath>> map = pathE.getMap();
+		pathE.findIntraMethodPaths();
+		pathE.blockToUnits();
+		Unit u;
+		pathE.findIntraClassPaths();
+		HashMap<SootMethod, List<Path<Unit>>> map = pathE.getUnitMap();
 		Set<SootMethod> keys = map.keySet();
 		for(SootMethod meth : keys ){
-			List<BlockPath> pathForMeth = map.get(meth);
+			List<Path<Unit>> pathForMeth = map.get(meth);
 			System.out.println(meth.toString());
 			System.out.println(pathForMeth.toString());
-			System.out.println("===Block===");
-			for(BlockPath blPath : pathForMeth){
-				for(Block bl : blPath.toList()){
-					System.out.println(bl.toString());
-					System.out.println("==Units==");
-					for(Iterator<Unit> unitIter = bl.iterator(); unitIter.hasNext();){
-						Unit unit = unitIter.next();
-						for(ValueBox vb : unit.getUseBoxes()){
-							if(vb instanceof InvokeExprBox){
-								JInvokeStmt st = new JInvokeStmt(vb.getValue());
-								//What can I do with that?
-							}
-						}
-//						System.out.println("Unit: "+unit.toString());
-//						for(ValueBox vb : unit.getUseBoxes()){
-//							System.out.println("\tValueBox tag: "+vb.getClass().getSimpleName());
-//							if(vb.getClass().getSimpleName().equals("InvokeExprBox")){
-//								InvokeExprBox ieb = (InvokeExprBox) vb;
-//								System.out.println(ieb.getTags());
-//							}
-//						}
-					}
-				}
-			}
+//			System.out.println("===Block===");
+//			for(BlockPath blPath : pathForMeth){
+//				System.out.println(blPath);
+////				for(Block bl : blPath.getBlocks()){
+////					System.out.println(bl.toString());
+//////					System.out.println("==Units==");
+//////					for(Iterator<Unit> unitIter = bl.iterator(); unitIter.hasNext();){
+//////						Unit unit = unitIter.next();
+//////						for(ValueBox vb : unit.getUseBoxes()){
+//////							if(vb instanceof InvokeExprBox){
+//////								JInvokeStmt st = new JInvokeStmt(vb.getValue());
+//////								InvokeExprBox ieb = (InvokeExprBox) vb;
+//////								System.out.println(st.getInvokeExpr().getMethod()+"============================================================");
+//////								//What can I do with that?
+//////							}
+//////						}
+////////						System.out.println("Unit: "+unit.toString());
+////////						for(ValueBox vb : unit.getUseBoxes()){
+////////							System.out.println("\tValueBox tag: "+vb.getClass().getSimpleName());
+////////							if(vb.getClass().getSimpleName().equals("InvokeExprBox")){
+////////								InvokeExprBox ieb = (InvokeExprBox) vb;
+////////								System.out.println(ieb.getTags());
+////////							}
+////////						}
+//////					}
+////				}
+//			}
 			
 		}
 	}

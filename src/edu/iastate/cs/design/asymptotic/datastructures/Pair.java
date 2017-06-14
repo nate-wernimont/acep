@@ -69,7 +69,7 @@ public class Pair <T1, T2>  {
 		return snd;
 	}
 
-	public void setSeconnd(T2 snd) {
+	public void setSecond(T2 snd) {
 		this.snd = snd;
 	}
 	
