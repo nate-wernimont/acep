@@ -1,0 +1,16 @@
+<benchmark>
+        <class>JGFSparseMatmultBenchSizeA</class>	<!-- the mainclass that contains main method -->
+        <method>main</method>	<!-- the entry point method (change it if not main) -->
+        <processdir>
+                <dir>./sparsematmult</dir>	<!-- directory which contains config.xml and lib -->
+        </processdir>
+        <includes>
+                <inc>jgfutil</inc>	<!-- based on the imports in the program, if some packages have to be analyzed -->
+                <inc>crypt</inc>
+        </includes>
+        <lib>./sparsematmult/lib</lib>	<!-- lib folder location -->
+        <jre>/Library/Java/JavaVirtualMachines/1.6.0_37-b06-434.jdk/Contents/Home/lib</jre>	<!-- jre location, basically this location needs to contain rt.jar and jce.jar -->
+        <jars>
+                <jar>JG.jar</jar>	<!-- program jar file containing all class files to be analyzed -->
+        </jars>
+</benchmark>

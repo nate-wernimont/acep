@@ -200,9 +200,9 @@ public class Benchmark {
 		Scene.v().loadNecessaryClasses();
 		//Scene.v().addBasicClass("java.io.ObjectStreamClass$MemberSignature", SootClass.SIGNATURES);
 		// Spark analysis, true for brief analysis and false for full
-		CallGraphBuilder.setSparkPointsToAnalysis(true);
+		//CallGraphBuilder.setSparkPointsToAnalysis(true);    <--- UNCOMMENT
 		// Create callgraph
-		_cg = new CallGraphDFS(_sootMethod);
+		//_cg = new CallGraphDFS(_sootMethod);   <--- UNCOMMENT
 	}
 
 	public CallGraphDFS getCallGraph() {

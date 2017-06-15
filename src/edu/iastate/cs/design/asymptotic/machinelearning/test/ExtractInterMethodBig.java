@@ -1,12 +1,12 @@
-package edu.iastate.cs.design.asymptotic.branching.test;
+package edu.iastate.cs.design.asymptotic.machinelearning.test;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import edu.iastate.cs.design.asymptotic.branching.BlockPath;
-import edu.iastate.cs.design.asymptotic.branching.PathEnumerator;
+import edu.iastate.cs.design.asymptotic.machinelearning.calculation.BlockPath;
+import edu.iastate.cs.design.asymptotic.machinelearning.calculation.PathEnumerator;
 import edu.iastate.cs.design.asymptotic.tests.benchmarks.Benchmark;
 import edu.iastate.cs.design.asymptotic.tests.benchmarks.Test;
 import soot.Body;

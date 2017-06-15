@@ -1,4 +1,4 @@
-package edu.iastate.cs.design.asymptotic.branching;
+package edu.iastate.cs.design.asymptotic.machinelearning.calculation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,9 +12,9 @@ import java.util.Stack;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import edu.iastate.cs.design.asymptotic.branching.FeatureStatistic.Count;
-import edu.iastate.cs.design.asymptotic.branching.FeatureStatistic.Coverage;
 import edu.iastate.cs.design.asymptotic.datastructures.Pair;
+import edu.iastate.cs.design.asymptotic.machinelearning.calculation.FeatureStatistic.Count;
+import edu.iastate.cs.design.asymptotic.machinelearning.calculation.FeatureStatistic.Coverage;
 import edu.iastate.cs.design.asymptotic.tests.benchmarks.Benchmark;
 import edu.iastate.cs.design.asymptotic.tests.benchmarks.Test;
 import soot.Body;
@@ -43,22 +43,22 @@ public class PathEnumerator {
 	/**
 	 * The class whose paths will be enumerated
 	 */
-	public SootClass _class;
+	private SootClass _class;
 	
 	/**
 	 * A mapping from methods to a list of every path of type block through the method
 	 */
-	HashMap<SootMethod, List<Path<Block>>> _block_map;
+	private HashMap<SootMethod, List<Path<Block>>> block_map;
 	
 	/**
 	 * A mapping from methods to a list of every path of type unit through the method
 	 */
-	HashMap<SootMethod, List<Path<Unit>>> _unit_map;
+	private HashMap<SootMethod, List<Path<Unit>>> unit_map;
 	
 	/**
 	 * A mapping from paths to a feature count
 	 */
-	HashMap<Path<Unit>, FeatureStatistic> _features;
+	private HashMap<Path<Unit>, FeatureStatistic> features;
 	
 	/**
 	 * Construct a PathEnumerator using a given class.
@@ -66,12 +66,13 @@ public class PathEnumerator {
 	 */
 	public PathEnumerator(SootClass _class){
 		this._class = _class;
-		_block_map = new HashMap<SootMethod, List<Path<Block>>>();
-		_unit_map = new HashMap<SootMethod, List<Path<Unit>>>();
-		_features = new HashMap<Path<Unit>, FeatureStatistic>();
+		block_map = new HashMap<SootMethod, List<Path<Block>>>();
+		unit_map = new HashMap<SootMethod, List<Path<Unit>>>();
+		features = new HashMap<Path<Unit>, FeatureStatistic>();
 	}
 	
 	public void run(){
+		System.out.println("===="+_class.getName()+"====");
 		findIntraMethodPaths();
 		blockToUnits();
 		findIntraClassPaths();
@@ -93,7 +94,7 @@ public class PathEnumerator {
 			//Generates all of the possible paths through this method.
 			DFS(blockSt, methodPaths);
 			System.out.println("Finished method: "+method.toString());
-			_block_map.put(method, methodPaths);
+			block_map.put(method, methodPaths);
 		}
 	}
 	
@@ -103,7 +104,7 @@ public class PathEnumerator {
 	private void blockToUnits(){
 		for(SootMethod meth : _class.getMethods()){
 			List<Path<Unit>> convertedList = new ArrayList<Path<Unit>>();
-			for(Path<Block> toConvert : _block_map.get(meth)){
+			for(Path<Block> toConvert : block_map.get(meth)){
 				Path<Unit> converted = new Path<>();
 				for(Block block : toConvert.getElements()){
 					for(Iterator<Unit> unitIter = block.iterator(); unitIter.hasNext();){
@@ -112,7 +113,7 @@ public class PathEnumerator {
 				}
 				convertedList.add(converted);
 			}
-			_unit_map.put(meth, convertedList);
+			unit_map.put(meth, convertedList);
 		}
 	}
 	
@@ -121,46 +122,110 @@ public class PathEnumerator {
 	 */
 	private void findIntraClassPaths(){
 		Queue<SootMethod> toDo = new LinkedBlockingQueue<>();
+		Queue<SootMethod> initialPass = new LinkedBlockingQueue<>();
+		
 		for(SootMethod meth : _class.getMethods()){
-			toDo.add(meth);
+			initialPass.add(meth);
 		}
-		Set<SootMethod> vMethod = new HashSet<SootMethod>();
-		while(!toDo.isEmpty()){
-			SootMethod original_meth = toDo.poll();
-			List<Path<Unit>> original_paths = new ArrayList<Path<Unit>>(_unit_map.get(original_meth));
+		
+		float maxMethodsVisited = 0;
+		
+		//This does a first pass through, which collects the method invocations only from the method that it is analyzing
+		while(!initialPass.isEmpty()){
+			SootMethod original_meth = initialPass.poll();
+			List<Path<Unit>> original_paths = new ArrayList<Path<Unit>>(unit_map.get(original_meth));
 			boolean changed = false;
 			for(Path<Unit> original_path : original_paths){
 				for(Unit unit : original_path.getElements()){
 					SootMethod method_called = methodInvocation(unit);
 					if(method_called != null){
-						vMethod.add(method_called);
-						FeatureStatistic updateMethodsCalled = _features.get(original_path);
-						if(updateMethodsCalled == null)//It didnt have one yet
+						FeatureStatistic updateMethodsCalled = features.get(original_path);
+						if(updateMethodsCalled == null){//It didnt have one yet
 							updateMethodsCalled = new FeatureStatistic();
-						if(method_called.equals(original_meth)){//TODO: fix infinite loops. Have to check if a method already contained is within it.
-							//TODO: update local invocations
+							features.put(original_path, updateMethodsCalled);
+						}
+						if(method_called.equals(original_meth)){//local invocation of itself
+							//I do not want this path - it involves an infinite loop and I only want one element of each
+							unit_map.get(original_meth).remove(original_path);
+							features.remove(original_path);
 						} else if(method_called.getDeclaringClass().equals(_class)){
-							for(Path<Unit> path_in_path : _unit_map.get(method_called)){
+							for(Path<Unit> path_in_path : unit_map.get(method_called)){
+								if(original_path.contains(path_in_path.getElements().get(0))){//local invocation of a method that has already been called
+									//represents an infinite loop and I do not want this path.
+									unit_map.get(original_meth).remove(original_path);
+									features.remove(original_path);
+									continue;
+								}
 								//remake the path
+								updateMethodsCalled = new FeatureStatistic(updateMethodsCalled);
 								Path<Unit> newPath = original_path.copy();
 								newPath.insertAfter(unit, path_in_path);
 								newPath.remove(unit);
-								List<Path<Unit>> paths = _unit_map.get(original_meth);
+								List<Path<Unit>> paths = unit_map.get(original_meth);
 								paths.remove(original_path);
 								paths.add(newPath);
-								_unit_map.put(original_meth, paths);
+								unit_map.put(original_meth, paths);
 								changed = true;
 								
 								//Update featurecount
-								_features.remove(original_path);
+								features.remove(original_path);
 								updateMethodsCalled.increment(Count.INVOCATIONS);
 								updateMethodsCalled.increment(Count.LOCAL_INVOCATIONS);
-								_features.put(newPath, updateMethodsCalled);
+								features.put(newPath, updateMethodsCalled);
 							}
 						} else {
 							updateMethodsCalled.increment(Count.INVOCATIONS);
 							updateMethodsCalled.increment(Count.NON_LOCAL_INVOCATIONS);
-							_features.put(original_path, updateMethodsCalled);
+						}
+						if(updateMethodsCalled.getValue(Count.INVOCATIONS) > maxMethodsVisited)
+							maxMethodsVisited = updateMethodsCalled.getValue(Count.INVOCATIONS);
+					}
+				}
+			}
+			if(changed){
+				toDo.add(original_meth);
+			}
+		}
+		
+		//Get the invocations coverage
+		for(SootMethod sm : _class.getMethods()){
+			for(Path<Unit> p : unit_map.get(sm)){
+				FeatureStatistic fc = features.get(p);
+				if(fc == null)
+					fc = new FeatureStatistic();
+				fc.setValue(Coverage.INVOCATIONS, fc.getValue(Count.INVOCATIONS)/maxMethodsVisited);
+				features.put(p, fc);
+			}
+		}
+		
+		//Finish flattening out the class
+		while(!toDo.isEmpty()){
+			SootMethod original_meth = toDo.poll();
+			List<Path<Unit>> original_paths = new ArrayList<Path<Unit>>(unit_map.get(original_meth));
+			boolean changed = false;
+			for(Path<Unit> original_path : original_paths){
+				for(Unit unit : original_path.getElements()){
+					SootMethod method_called = methodInvocation(unit);
+					if(method_called != null){
+						if(method_called.getDeclaringClass().equals(_class) && !method_called.equals(original_meth)){
+							for(Path<Unit> path_in_path : unit_map.get(method_called)){
+								if(original_path.contains(path_in_path.getElements().get(0)))//local invocation of a method that has already been called
+									continue;
+								
+								//remake the path
+								Path<Unit> newPath = original_path.copy();
+								newPath.insertAfter(unit, path_in_path);
+								newPath.remove(unit);
+								List<Path<Unit>> paths = unit_map.get(original_meth);
+								paths.remove(original_path);
+								paths.add(newPath);
+								unit_map.put(original_meth, paths);
+								changed = true;
+								
+								//Propagate the features count
+								FeatureStatistic feature = features.get(original_path);
+								features.put(newPath, new FeatureStatistic(feature));
+							}
 						}
 					}
 				}
@@ -169,28 +234,19 @@ public class PathEnumerator {
 				toDo.add(original_meth);
 			}
 		}
-		int allMethodSize = vMethod.size();
-		for(SootMethod sm : _class.getMethods()){
-			for(Path<Unit> p : _unit_map.get(sm)){
-				FeatureStatistic fc = _features.get(p);
-				if(fc == null)
-					fc = new FeatureStatistic();
-				fc.setValue(Coverage.INVOCATIONS, fc.getValue(Count.INVOCATIONS)/allMethodSize);
-				_features.put(p, fc);
-			}
-		}
 	}
 	
 	/**
 	 * Calculate all of the feature counts for each path
 	 */
 	private void calculateCounts(){
-		Set<Value> vVariables = new HashSet<Value>();
-		Set<Value> vParameters = new HashSet<Value>();
-		int maxFieldsWritten = 0;
+		float maxFieldsWritten = 0;
+		float maxVariablesAccessed = 0;
+		float maxParametersUsed = 0;
+		
 		for(SootMethod sm : _class.getMethods()){
-			for(Path<Unit> path : _unit_map.get(sm)){
-				FeatureStatistic feature = _features.get(path);
+			for(Path<Unit> path : unit_map.get(sm)){
+				FeatureStatistic feature = features.get(path);
 				Set<Value> localVariables = new HashSet<Value>();
 				Set<Value> allVariables = new HashSet<Value>();
 				for(Unit unit : path.getElements()){
@@ -260,7 +316,6 @@ public class PathEnumerator {
 						for(ValueBox vb : unit.getUseBoxes()){
 							if(vb.getValue().getClass().getSimpleName().equals("ParameterRef")){
 								feature.increment(Count.PARAMETERS);
-								vParameters.add(vb.getValue());
 							}
 						}
 						break;
@@ -305,7 +360,6 @@ public class PathEnumerator {
 				
 				feature.increment(Count.ALL_VARIABLES, allVariables.size());
 				feature.increment(Count.LOCAL_VARIABLES, localVariables.size());
-				vVariables.addAll(localVariables);
 				
 				Iterator<SootField> fieldsWrittenIter = _class.getFields().snapshotIterator();
 				Set<SootField> fields = new HashSet<SootField>();
@@ -318,24 +372,27 @@ public class PathEnumerator {
 						}
 					}
 				}
-				feature.setValue(Coverage.FIELDS, fields.size()/_class.getFieldCount());
+				feature.setValue(Coverage.FIELDS, (float)fields.size()/_class.getFieldCount());
 				feature.increment(Count.FIELDS, fields.size());
 				
 				if(feature.getValue(Count.FIELDS_WRITTEN) > maxFieldsWritten)
 					maxFieldsWritten = feature.getValue(Count.FIELDS_WRITTEN);
+				if(feature.getValue(Count.LOCAL_VARIABLES) > maxVariablesAccessed)
+					maxVariablesAccessed = feature.getValue(Count.LOCAL_VARIABLES);
+				if(feature.getValue(Count.PARAMETERS) > maxParametersUsed)
+					maxParametersUsed = feature.getValue(Count.PARAMETERS);
 				
-				_features.put(path, feature);
+				features.put(path, feature);
 			}
 		}
-		
 		//coverage
 		for(SootMethod sm : _class.getMethods()){
-			for(Path<Unit> p : _unit_map.get(sm)){
-				FeatureStatistic features = _features.get(p);
-				features.setValue(Coverage.FIELDS_WRITTEN, features.getValue(Count.FIELDS_WRITTEN)/maxFieldsWritten);
-				features.setValue(Coverage.LOCAL_VARIABLES, features.getValue(Count.LOCAL_VARIABLES)/vVariables.size());
-				features.setValue(Coverage.PARAMETERS, features.getValue(Count.PARAMETERS)/vParameters.size());
-				_features.put(p, features);
+			for(Path<Unit> p : unit_map.get(sm)){
+				FeatureStatistic feature = features.get(p);
+				feature.setValue(Coverage.FIELDS_WRITTEN, feature.getValue(Count.FIELDS_WRITTEN)/maxFieldsWritten);
+				feature.setValue(Coverage.LOCAL_VARIABLES, feature.getValue(Count.LOCAL_VARIABLES)/maxVariablesAccessed);
+				feature.setValue(Coverage.PARAMETERS, feature.getValue(Count.PARAMETERS)/maxParametersUsed);
+				features.put(p, feature);
 			}
 		}
 	}
@@ -380,7 +437,7 @@ public class PathEnumerator {
 	 * @return The block map
 	 */
 	public HashMap<SootMethod, List<Path<Block>>> getBlockMap(){
-		return _block_map;
+		return block_map;
 	}
 	
 	/**
@@ -388,7 +445,7 @@ public class PathEnumerator {
 	 * @return The unit map
 	 */
 	public HashMap<SootMethod, List<Path<Unit>>> getUnitMap(){
-		return _unit_map;
+		return unit_map;
 	}
 	
 	/**
@@ -396,7 +453,7 @@ public class PathEnumerator {
 	 * @return Hashmap mapping the paths to the feature statistics
 	 */
 	public HashMap<Path<Unit>, FeatureStatistic> getFeatureStatistics(){
-		return _features;
+		return features;
 	}
 	
 }

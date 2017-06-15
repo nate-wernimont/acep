@@ -1,4 +1,4 @@
-package edu.iastate.cs.design.asymptotic.branching;
+package edu.iastate.cs.design.asymptotic.machinelearning.calculation;
 
 import java.util.ArrayList;
 import java.util.Collection;

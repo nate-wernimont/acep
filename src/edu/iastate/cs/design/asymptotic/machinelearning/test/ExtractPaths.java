@@ -1,13 +1,13 @@
-package edu.iastate.cs.design.asymptotic.branching.test;
+package edu.iastate.cs.design.asymptotic.machinelearning.test;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import edu.iastate.cs.design.asymptotic.branching.FeatureStatistic;
-import edu.iastate.cs.design.asymptotic.branching.Path;
-import edu.iastate.cs.design.asymptotic.branching.PathEnumerator;
+import edu.iastate.cs.design.asymptotic.machinelearning.calculation.FeatureStatistic;
+import edu.iastate.cs.design.asymptotic.machinelearning.calculation.Path;
+import edu.iastate.cs.design.asymptotic.machinelearning.calculation.PathEnumerator;
 import soot.Scene;
 import soot.SootClass;
 import soot.SootField;

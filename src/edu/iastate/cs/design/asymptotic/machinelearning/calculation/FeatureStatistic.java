@@ -1,31 +1,31 @@
-package edu.iastate.cs.design.asymptotic.branching;
+package edu.iastate.cs.design.asymptotic.machinelearning.calculation;
 
 public class FeatureStatistic {
 	
 	public enum Count {
-		COMPARISONS				(0),
-		NEW						(1),
-		THIS					(2),
-		ALL_VARIABLES			(3),
-		ASSIGNMENTS				(4),
-		DEREFERENCES			(5),
-		FIELDS					(6),
-		FIELDS_WRITTEN			(7),
-		INVOCATIONS				(8),
-		GOTO					(9),
-		IF						(10),
-		LOCAL_INVOCATIONS		(11),
-		LOCAL_VARIABLES			(12),
-		NON_LOCAL_INVOCATIONS	(13),
-		PARAMETERS				(14),
-		RETURN					(15),
-		STATEMENTS				(16),
-		THROW					(17);
+		COMPARISONS				,
+		NEW						,
+		THIS					,
+		ALL_VARIABLES			,
+		ASSIGNMENTS				,
+		DEREFERENCES			,
+		FIELDS					,
+		FIELDS_WRITTEN			,
+		INVOCATIONS				,
+		GOTO					,
+		IF						,
+		LOCAL_INVOCATIONS		,
+		LOCAL_VARIABLES			,
+		NON_LOCAL_INVOCATIONS	,
+		PARAMETERS				,
+		RETURN					,
+		STATEMENTS				,
+		THROW					;
 		
 		private int identifier;
 		
-		Count(int num){
-			identifier = num;
+		Count(){
+			identifier = this.ordinal();
 		}
 	}
 	
@@ -50,6 +50,18 @@ public class FeatureStatistic {
 	public FeatureStatistic(){
 		counts = new int[18];
 		coverages = new float[5];
+	}
+	
+	public FeatureStatistic(FeatureStatistic that){
+		this();
+		if(that == null)
+			throw new NullPointerException();
+		for(int i = 0; i < 18; i++){
+			this.counts[i] = that.counts[i];
+		}
+		for(int i = 0; i < 5; i++){
+			this.coverages[i] = that.coverages[i]; 
+		}
 	}
 	
 	public void reset(){
@@ -88,7 +100,7 @@ public class FeatureStatistic {
 		}
 		result += "\n====Coverages====\n";
 		for(Coverage coverage : Coverage.values()){
-			result += coverage.name()+": "+coverages[coverage.identifier]+"\n";
+			result += String.format("%s: %.3f\n",coverage.name(),coverages[coverage.identifier]);
 		}
 		return result;
 	}

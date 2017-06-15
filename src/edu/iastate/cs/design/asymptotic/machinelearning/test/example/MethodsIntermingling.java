@@ -1,4 +1,4 @@
-package edu.iastate.cs.design.asymptotic.branching.test.example;
+package edu.iastate.cs.design.asymptotic.machinelearning.test.example;
 
 public class MethodsIntermingling {
 
