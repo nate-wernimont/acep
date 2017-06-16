@@ -36,7 +36,7 @@ public class Path<E> implements List<E> {
 	
 	public Path(Stack<E> st){
 		this();
-		Stack<E> stack = new Stack<>();
+		Stack<E> stack = new Stack<E>();
 		stack = (Stack<E>) st.clone();
 		while(!stack.isEmpty()){
 			this.addToStart(stack.pop());

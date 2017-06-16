@@ -86,7 +86,7 @@ public class PathEnumerator {
 		for(Iterator<SootMethod> methIter = _class.methodIterator(); methIter.hasNext();){
 			List<Path<Block>> methodPaths = new ArrayList<Path<Block>>();
 			SootMethod method = methIter.next();
-			Stack<Block> blockSt = new Stack<>();
+			Stack<Block> blockSt = new Stack<Block>();
 			Body b = method.retrieveActiveBody();
 			BlockGraph bg = new BriefBlockGraph(b);
 			Block firstBlock = bg.getBlocks().get(0);
@@ -105,7 +105,7 @@ public class PathEnumerator {
 		for(SootMethod meth : _class.getMethods()){
 			List<Path<Unit>> convertedList = new ArrayList<Path<Unit>>();
 			for(Path<Block> toConvert : block_map.get(meth)){
-				Path<Unit> converted = new Path<>();
+				Path<Unit> converted = new Path<Unit>();
 				for(Block block : toConvert.getElements()){
 					for(Iterator<Unit> unitIter = block.iterator(); unitIter.hasNext();){
 						converted.add(unitIter.next());
@@ -121,8 +121,8 @@ public class PathEnumerator {
 	 * Using the unit map, generates all of the paths through the class.
 	 */
 	private void findIntraClassPaths(){
-		Queue<SootMethod> toDo = new LinkedBlockingQueue<>();
-		Queue<SootMethod> initialPass = new LinkedBlockingQueue<>();
+		Queue<SootMethod> toDo = new LinkedBlockingQueue<SootMethod>();
+		Queue<SootMethod> initialPass = new LinkedBlockingQueue<SootMethod>();
 		
 		for(SootMethod meth : _class.getMethods()){
 			initialPass.add(meth);
@@ -254,7 +254,7 @@ public class PathEnumerator {
 					switch(unit.getClass().getSimpleName()){
 					case "JAssignStmt":
 						Value varValue = null;
-						Pair<Value, Boolean> localVariable = new Pair<>(null, false);
+						Pair<Value, Boolean> localVariable = new Pair<Value, Boolean>(null, false);
 						for(ValueBox box : unit.getUseBoxes()){
 							if(box.getClass().getSimpleName().equals("JimpleLocalBox")){
 								localVariable.setFirst(box.getValue());

@@ -25,7 +25,7 @@ public class ExtractPaths {
 
 	public static void main(String[] args){
 		String _classpath = "/Library/Java/JavaVirtualMachines/1.6.0_37-b06-434.jdk/Contents/Home/lib/rt.jar:/Library/Java/JavaVirtualMachines/1.6.0_37-b06-434.jdk/Contents/Home/lib/jce.jar:/Users/natemw/Documents/workspace/Test/bin";
-	
+		
 		Options.v().set_keep_line_number(true);
 		Options.v().set_soot_classpath(_classpath);
 		System.out.println(Options.v().soot_classpath());

@@ -91,7 +91,7 @@ public class CollectData {
 	
 	private void generateData(Instances data, HashMap<Path<Unit>, FeatureStatistic> statistics){
 		//Create data framework
-		ArrayList<Attribute> attributes = new ArrayList<>();
+		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
 		for(Count count : FeatureStatistic.Count.values()){
 			attributes.add(new Attribute(count.name()+"_COUNT"));
 		}
