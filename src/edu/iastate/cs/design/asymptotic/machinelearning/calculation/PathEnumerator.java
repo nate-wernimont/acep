@@ -30,7 +30,13 @@ import soot.jimple.InvokeExpr;
 import soot.jimple.InvokeStmt;
 import soot.jimple.internal.ImmediateBox;
 import soot.jimple.internal.InvokeExprBox;
+import soot.jimple.internal.JAssignStmt;
+import soot.jimple.internal.JDynamicInvokeExpr;
+import soot.jimple.internal.JInterfaceInvokeExpr;
 import soot.jimple.internal.JInvokeStmt;
+import soot.jimple.internal.JSpecialInvokeExpr;
+import soot.jimple.internal.JStaticInvokeExpr;
+import soot.jimple.internal.JVirtualInvokeExpr;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.toolkits.graph.Block;
 import soot.toolkits.graph.BlockGraph;
@@ -151,7 +157,6 @@ public class PathEnumerator {
 						} else if(method_called.getDeclaringClass().equals(_class)){
 							for(Path<Unit> path_in_path : unit_map.get(method_called)){
 								if(original_path.contains(path_in_path.getElements().get(0))){//local invocation of a method that has already been called
-									//represents an infinite loop and I do not want this path.
 									unit_map.get(original_meth).remove(original_path);
 									features.remove(original_path);
 									continue;
@@ -403,9 +408,16 @@ public class PathEnumerator {
 	 * @return The method that is invoked or null if there is no invocation
 	 */
 	public SootMethod methodInvocation(Unit unit){
-		if(unit instanceof InvokeStmt){
-			JInvokeStmt jis = (JInvokeStmt) unit;
-			return jis.getInvokeExpr().getMethod();
+		if(unit instanceof JInvokeStmt){
+			return ((JInvokeStmt) unit).getInvokeExpr().getMethod();
+		} else if(unit instanceof JAssignStmt){
+			for(ValueBox vb : unit.getUseBoxes()){
+				if(vb.getClass().getSimpleName().equals("LinkedRValueBox")){
+					if(vb.getValue() instanceof InvokeExpr){
+						return ((InvokeExpr) vb.getValue()).getMethod();
+					}
+				}
+			}
 		}
 		return null;
 	}

@@ -61,6 +61,10 @@ public class Path<E> implements List<E> {
 		addBefore(e, root.next);
 	}
 	
+	public E getLast(){
+		return tail.prev.body;
+	}
+	
 	public boolean insertAfter(E addAfterThis, Path<E> toAdd){
 		boolean found = false;
 		Node curr = root.next;

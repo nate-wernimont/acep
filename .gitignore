@@ -1,5 +1,8 @@
 .DS_Store
 /bin/
-/lib/weka/*
+/lib/weka/
 *.dot
 *.pdf
+*.jimple
+/profilingOutput/*
+sootOutput/*.class

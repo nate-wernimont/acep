@@ -9,43 +9,32 @@ public class Test.alg extends java.lang.Object
         java.lang.String[] r0;
         byte b0, b1;
         Test.alg r1, $r2;
-        java.io.File file;
-        java.io.FileWriter fileWriter;
-        java.io.Writer bufferedWriter;
 
         r0 := @parameter0: java.lang.String[];
-        file = new java.io.File;
-        specialinvoke file.<java.io.File: void <init>(java.lang.String)>("/Users/natemw/Documents/acep/profilingOutput/blah.txt");
-        virtualinvoke file.<java.io.File: boolean createNewFile()>();
-        fileWriter = new java.io.FileWriter;
-        specialinvoke fileWriter.<java.io.FileWriter: void <init>(java.io.File)>(file);
-        bufferedWriter = new java.io.BufferedWriter;
-        specialinvoke bufferedWriter.<java.io.BufferedWriter: void <init>(java.io.Writer)>(fileWriter);
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void main(java.lang.String[])>~~~r0 := @parameter0: java.lang.String[]\n", "alg");
         b0 = 5;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: main: b0 = 5\n");
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: main: r0 := @parameter0: java.lang.String[]\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void main(java.lang.String[])>~~~b0 = 5\n", "alg");
         if b0 != 5 goto label0;
 
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: main: if b0 != 5 goto b1 = 2\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void main(java.lang.String[])>~~~if b0 != 5 goto b1 = 2\n", "alg");
         $r2 = new Test.alg;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: main: $r2 = new Test.alg\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void main(java.lang.String[])>~~~$r2 = new Test.alg\n", "alg");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void main(java.lang.String[])>~~~specialinvoke $r2.<Test.alg: void <init>()>()\n", "alg");
         specialinvoke $r2.<Test.alg: void <init>()>();
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: main: specialinvoke $r2.<Test.alg: void <init>()>()\n");
         r1 = $r2;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: main: r1 = $r2\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void main(java.lang.String[])>~~~r1 = $r2\n", "alg");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void main(java.lang.String[])>~~~virtualinvoke r1.<Test.alg: void run(int)>(4)\n", "alg");
         virtualinvoke r1.<Test.alg: void run(int)>(4);
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: main: virtualinvoke r1.<Test.alg: void run(int)>(4)\n");
         goto label1;
 
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: main: goto [?= return]\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void main(java.lang.String[])>~~~goto [?= return]\n", "alg");
 
      label0:
         b1 = 2;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: main: b1 = 2\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void main(java.lang.String[])>~~~b1 = 2\n", "alg");
 
      label1:
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: main: return\n");
-        virtualinvoke bufferedWriter.<java.io.Writer: void close()>();
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void main(java.lang.String[])>~~~return\n", "alg");
         return;
     }
 
@@ -53,31 +42,20 @@ public class Test.alg extends java.lang.Object
     {
         Test.alg r0;
         int[] $r1;
-        java.io.File file;
-        java.io.FileWriter fileWriter;
-        java.io.Writer bufferedWriter;
 
         r0 := @this: Test.alg;
-        file = new java.io.File;
-        specialinvoke file.<java.io.File: void <init>(java.lang.String)>("/Users/natemw/Documents/acep/profilingOutput/blah.txt");
-        virtualinvoke file.<java.io.File: boolean createNewFile()>();
-        fileWriter = new java.io.FileWriter;
-        specialinvoke fileWriter.<java.io.FileWriter: void <init>(java.io.File)>(file);
-        bufferedWriter = new java.io.BufferedWriter;
-        specialinvoke bufferedWriter.<java.io.BufferedWriter: void <init>(java.io.Writer)>(fileWriter);
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void <init>()>~~~r0 := @this: Test.alg\n", "alg");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void <init>()>~~~specialinvoke r0.<java.lang.Object: void <init>()>()\n", "alg");
         specialinvoke r0.<java.lang.Object: void <init>()>();
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: <init>: specialinvoke r0.<java.lang.Object: void <init>()>()\n");
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: <init>: r0 := @this: Test.alg\n");
         r0.<Test.alg: int y> = 2;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: <init>: r0.<Test.alg: int y> = 2\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void <init>()>~~~r0.<Test.alg: int y> = 2\n", "alg");
         r0.<Test.alg: int z> = 5;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: <init>: r0.<Test.alg: int z> = 5\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void <init>()>~~~r0.<Test.alg: int z> = 5\n", "alg");
         $r1 = newarray (int)[500];
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: <init>: $r1 = newarray (int)[500]\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void <init>()>~~~$r1 = newarray (int)[500]\n", "alg");
         r0.<Test.alg: int[] arr> = $r1;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: <init>: r0.<Test.alg: int[] arr> = $r1\n");
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: <init>: return\n");
-        virtualinvoke bufferedWriter.<java.io.Writer: void close()>();
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void <init>()>~~~r0.<Test.alg: int[] arr> = $r1\n", "alg");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void <init>()>~~~return\n", "alg");
         return;
     }
 
@@ -86,45 +64,34 @@ public class Test.alg extends java.lang.Object
         Test.alg r0;
         int i0, i1;
         int[] $r1;
-        java.io.File file;
-        java.io.FileWriter fileWriter;
-        java.io.Writer bufferedWriter;
 
         r0 := @this: Test.alg;
         i0 := @parameter0: int;
-        file = new java.io.File;
-        specialinvoke file.<java.io.File: void <init>(java.lang.String)>("/Users/natemw/Documents/acep/profilingOutput/blah.txt");
-        virtualinvoke file.<java.io.File: boolean createNewFile()>();
-        fileWriter = new java.io.FileWriter;
-        specialinvoke fileWriter.<java.io.FileWriter: void <init>(java.io.File)>(file);
-        bufferedWriter = new java.io.BufferedWriter;
-        specialinvoke bufferedWriter.<java.io.BufferedWriter: void <init>(java.io.Writer)>(fileWriter);
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void run(int)>~~~r0 := @this: Test.alg\n", "alg");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void run(int)>~~~i0 := @parameter0: int\n", "alg");
         i1 = 0;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: run: i1 = 0\n");
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: run: i0 := @parameter0: int\n");
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: run: r0 := @this: Test.alg\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void run(int)>~~~i1 = 0\n", "alg");
         goto label1;
 
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: run: goto [?= (branch)]\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void run(int)>~~~goto [?= (branch)]\n", "alg");
 
      label0:
         $r1 = r0.<Test.alg: int[] arr>;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: run: $r1 = r0.<Test.alg: int[] arr>\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void run(int)>~~~$r1 = r0.<Test.alg: int[] arr>\n", "alg");
         $r1[i1] = i1;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: run: $r1[i1] = i1\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void run(int)>~~~$r1[i1] = i1\n", "alg");
         i1 = i1 + 1;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: run: i1 = i1 + 1\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void run(int)>~~~i1 = i1 + 1\n", "alg");
 
      label1:
         if i1 < 500 goto label0;
 
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: run: if i1 < 500 goto $r1 = r0.<Test.alg: int[] arr>\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void run(int)>~~~if i1 < 500 goto $r1 = r0.<Test.alg: int[] arr>\n", "alg");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void run(int)>~~~virtualinvoke r0.<Test.alg: void foo()>()\n", "alg");
         virtualinvoke r0.<Test.alg: void foo()>();
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: run: virtualinvoke r0.<Test.alg: void foo()>()\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void run(int)>~~~virtualinvoke r0.<Test.alg: void bar()>()\n", "alg");
         virtualinvoke r0.<Test.alg: void bar()>();
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: run: virtualinvoke r0.<Test.alg: void bar()>()\n");
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: run: return\n");
-        virtualinvoke bufferedWriter.<java.io.Writer: void close()>();
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void run(int)>~~~return\n", "alg");
         return;
     }
 
@@ -134,50 +101,39 @@ public class Test.alg extends java.lang.Object
         byte b0, b1, b2, b6;
         int $i3, $i4, i5, $i7;
         int[] $r1;
-        java.io.File file;
-        java.io.FileWriter fileWriter;
-        java.io.Writer bufferedWriter;
 
         r0 := @this: Test.alg;
-        file = new java.io.File;
-        specialinvoke file.<java.io.File: void <init>(java.lang.String)>("/Users/natemw/Documents/acep/profilingOutput/blah.txt");
-        virtualinvoke file.<java.io.File: boolean createNewFile()>();
-        fileWriter = new java.io.FileWriter;
-        specialinvoke fileWriter.<java.io.FileWriter: void <init>(java.io.File)>(file);
-        bufferedWriter = new java.io.BufferedWriter;
-        specialinvoke bufferedWriter.<java.io.BufferedWriter: void <init>(java.io.Writer)>(fileWriter);
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void foo()>~~~r0 := @this: Test.alg\n", "alg");
         b0 = 3;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: foo: b0 = 3\n");
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: foo: r0 := @this: Test.alg\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void foo()>~~~b0 = 3\n", "alg");
         b1 = 7;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: foo: b1 = 7\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void foo()>~~~b1 = 7\n", "alg");
         b2 = 7;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: foo: b2 = 7\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void foo()>~~~b2 = 7\n", "alg");
         $i3 = r0.<Test.alg: int y>;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: foo: $i3 = r0.<Test.alg: int y>\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void foo()>~~~$i3 = r0.<Test.alg: int y>\n", "alg");
         r0.<Test.alg: int z> = $i3;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: foo: r0.<Test.alg: int z> = $i3\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void foo()>~~~r0.<Test.alg: int z> = $i3\n", "alg");
         $i4 = r0.<Test.alg: int y>;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: foo: $i4 = r0.<Test.alg: int y>\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void foo()>~~~$i4 = r0.<Test.alg: int y>\n", "alg");
         i5 = $i4 + 4;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: foo: i5 = $i4 + 4\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void foo()>~~~i5 = $i4 + 4\n", "alg");
         b6 = b1;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: foo: b6 = b1\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void foo()>~~~b6 = b1\n", "alg");
         $r1 = r0.<Test.alg: int[] arr>;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: foo: $r1 = r0.<Test.alg: int[] arr>\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void foo()>~~~$r1 = r0.<Test.alg: int[] arr>\n", "alg");
         $r1[b0] = b1;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: foo: $r1[b0] = b1\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void foo()>~~~$r1[b0] = b1\n", "alg");
         $i7 = r0.<Test.alg: int y>;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: foo: $i7 = r0.<Test.alg: int y>\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void foo()>~~~$i7 = r0.<Test.alg: int y>\n", "alg");
         if $i7 <= 3 goto label0;
 
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: foo: if $i7 <= 3 goto return\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void foo()>~~~if $i7 <= 3 goto return\n", "alg");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void foo()>~~~virtualinvoke r0.<Test.alg: void bar()>()\n", "alg");
         virtualinvoke r0.<Test.alg: void bar()>();
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: foo: virtualinvoke r0.<Test.alg: void bar()>()\n");
 
      label0:
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: foo: return\n");
-        virtualinvoke bufferedWriter.<java.io.Writer: void close()>();
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void foo()>~~~return\n", "alg");
         return;
     }
 
@@ -185,27 +141,16 @@ public class Test.alg extends java.lang.Object
     {
         Test.alg r0;
         int i0;
-        java.io.File file;
-        java.io.FileWriter fileWriter;
-        java.io.Writer bufferedWriter;
 
         r0 := @this: Test.alg;
-        file = new java.io.File;
-        specialinvoke file.<java.io.File: void <init>(java.lang.String)>("/Users/natemw/Documents/acep/profilingOutput/blah.txt");
-        virtualinvoke file.<java.io.File: boolean createNewFile()>();
-        fileWriter = new java.io.FileWriter;
-        specialinvoke fileWriter.<java.io.FileWriter: void <init>(java.io.File)>(file);
-        bufferedWriter = new java.io.BufferedWriter;
-        specialinvoke bufferedWriter.<java.io.BufferedWriter: void <init>(java.io.Writer)>(fileWriter);
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void bar()>~~~r0 := @this: Test.alg\n", "alg");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void bar()>~~~virtualinvoke r0.<Test.alg: void foo()>()\n", "alg");
         virtualinvoke r0.<Test.alg: void foo()>();
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: bar: virtualinvoke r0.<Test.alg: void foo()>()\n");
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: bar: r0 := @this: Test.alg\n");
         r0.<Test.alg: int y> = 3;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: bar: r0.<Test.alg: int y> = 3\n");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void bar()>~~~r0.<Test.alg: int y> = 3\n", "alg");
         i0 = r0.<Test.alg: int y>;
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: bar: i0 = r0.<Test.alg: int y>\n");
-        virtualinvoke bufferedWriter.<java.io.Writer: void write(java.lang.String)>("alg: bar: return\n");
-        virtualinvoke bufferedWriter.<java.io.Writer: void close()>();
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void bar()>~~~i0 = r0.<Test.alg: int y>\n", "alg");
+        staticinvoke <edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void print(java.lang.String,java.lang.String)>("<Test.alg: void bar()>~~~return\n", "alg");
         return;
     }
 }
