@@ -6,7 +6,7 @@
         </processdir>
         <includes>
                 <inc>jgfutil</inc>	<!-- based on the imports in the program, if some packages have to be analyzed -->
-                <inc>crypt</inc>
+                <inc>sor</inc>
         </includes>
         <lib>./sor/lib</lib>	<!-- lib folder location -->
         <jre>/Library/Java/JavaVirtualMachines/1.6.0_37-b06-434.jdk/Contents/Home/lib</jre>	<!-- jre location, basically this location needs to contain rt.jar and jce.jar -->

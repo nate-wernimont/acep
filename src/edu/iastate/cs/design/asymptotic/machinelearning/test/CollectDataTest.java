@@ -2,7 +2,7 @@ package edu.iastate.cs.design.asymptotic.machinelearning.test;
 
 import java.io.File;
 
-import edu.iastate.cs.design.asymptotic.machinelearning.calculation.CollectData;
+import edu.iastate.cs.design.asymptotic.machinelearning.calculation.EvaluateData;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.Classifier;
 
@@ -17,6 +17,6 @@ public class CollectDataTest {
 		}
 		test_configs[0] = classes[4] + File.separator + "config.xml";
 		Classifier classifier = AbstractClassifier.forName("J48", null);
-		CollectData data = new CollectData(training_configs, test_configs, classifier, "Sparsematmult", null);
+		EvaluateData data = new EvaluateData(training_configs, test_configs, classifier, "Sparsematmult", null);
 	}
 }

@@ -19,7 +19,7 @@ import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instances;
 
-public class CollectData {
+public class EvaluateData {
 
 	String[] _training_configs, _eval_configs;
 	
@@ -43,7 +43,7 @@ public class CollectData {
 	 * @param name The name of the test
 	 * @param hotPaths A List of all of the hot paths
 	 */
-	public CollectData(String[] training_configs, String[] eval_configs, Classifier classifier, String name, List<Path<Unit>> hotPaths){
+	public EvaluateData(String[] training_configs, String[] eval_configs, Classifier classifier, String name, List<Path<Unit>> hotPaths){
 		_training_configs = training_configs;
 		_eval_configs = eval_configs;
 		_classifier = classifier;

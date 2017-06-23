@@ -129,6 +129,7 @@ public class PathEnumerator {
 	private void findIntraClassPaths(){
 		Queue<SootMethod> toDo = new LinkedBlockingQueue<SootMethod>();
 		Queue<SootMethod> initialPass = new LinkedBlockingQueue<SootMethod>();
+		HashMap<Path<Unit>, List<Unit>> visitedMeths = new HashMap<>();
 		
 		for(SootMethod meth : _class.getMethods()){
 			initialPass.add(meth);
@@ -154,7 +155,7 @@ public class PathEnumerator {
 							//I do not want this path - it involves an infinite loop and I only want one element of each
 							unit_map.get(original_meth).remove(original_path);
 							features.remove(original_path);
-						} else if(method_called.getDeclaringClass().equals(_class)){
+						} else if(method_called.getDeclaringClass().equals(_class) && !visitedMeths.get(original_path).contains(unit)){
 							for(Path<Unit> path_in_path : unit_map.get(method_called)){
 								if(original_path.contains(path_in_path.getElements().get(0))){//local invocation of a method that has already been called
 									unit_map.get(original_meth).remove(original_path);
@@ -162,14 +163,17 @@ public class PathEnumerator {
 									continue;
 								}
 								//remake the path
+								List<Unit> oldVisitedMeths = visitedMeths.get(original_path);
 								updateMethodsCalled = new FeatureStatistic(updateMethodsCalled);
 								Path<Unit> newPath = original_path.copy();
 								newPath.insertAfter(unit, path_in_path);
-								newPath.remove(unit);
 								List<Path<Unit>> paths = unit_map.get(original_meth);
 								paths.remove(original_path);
 								paths.add(newPath);
 								unit_map.put(original_meth, paths);
+								oldVisitedMeths.add(unit);
+								visitedMeths.remove(original_path);
+								visitedMeths.put(newPath, oldVisitedMeths);
 								changed = true;
 								
 								//Update featurecount

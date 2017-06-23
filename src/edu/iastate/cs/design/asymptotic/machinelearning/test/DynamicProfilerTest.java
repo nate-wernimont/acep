@@ -22,9 +22,9 @@ public class DynamicProfilerTest {
 		SootClass sClass = Scene.v().forceResolve("Test.alg", SootClass.BODIES);
 		sClass.setApplicationClass();
 		DynamicProfiler alg = new DynamicProfiler(sClass);
-		alg.addTransformer(Options.output_format_class);
+		Scene.v().setMainClass(sClass);
+		alg.addTransformer(Options.output_format_jimple);
 		//alg.runNewClass();
-		File f = new File("/Users/natemw/Documents/acep/profilingOutput/alg.txt");
 		//alg.analyzeFile(f);
 	}
 	

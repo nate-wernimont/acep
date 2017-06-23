@@ -61,6 +61,10 @@ public class Path<E> implements List<E> {
 		addBefore(e, root.next);
 	}
 	
+	public boolean endsWith(E e){
+		return tail.prev.body.equals(e);
+	}
+	
 	public E getLast(){
 		return tail.prev.body;
 	}
@@ -113,10 +117,10 @@ public class Path<E> implements List<E> {
 	
 	@Override
 	public String toString(){
-		String result = "Start ->";
+		String result = "Start -> ";
 		Node curr = root.next;
 		while(curr.next != null){
-			result += curr.body.toString() + " ->";
+			result += curr.body.toString() + " -> ";
 			curr = curr.next;
 		}
 		return result += " End";
@@ -271,6 +275,28 @@ public class Path<E> implements List<E> {
 	@Override
 	public List<E> subList(int fromIndex, int toIndex) {
 		throw new NativeMethodNotSupportedException();
+	}
+	
+	@Override
+	public boolean equals(Object o){
+		if(this == null && o == null)
+			return true;
+		if(o == null || !o.getClass().equals(this.getClass())){
+			return false;
+		}
+		Path<E> that = (Path<E>) o;
+		if(this.size != that.size)
+			return false;
+		Node thisNode = this.root.next;
+		Node thatNode = that.root.next;
+		while(thisNode.body != null){
+			if(!thisNode.body.equals(thatNode.body)){
+				return false;
+			}
+			thisNode = thisNode.next;
+			thatNode = thatNode.next;
+		}
+		return true;
 	}
 
 }

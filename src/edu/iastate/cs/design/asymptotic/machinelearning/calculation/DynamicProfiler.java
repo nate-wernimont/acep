@@ -1,17 +1,22 @@
 package edu.iastate.cs.design.asymptotic.machinelearning.calculation;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.EmptyStackException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.TreeMap;
 
 import javax.management.timer.Timer;
 
@@ -35,6 +40,8 @@ public class DynamicProfiler {
 
 	SootClass _class;
 	
+	private static String FILE_LOCATION = "";
+	
 	public DynamicProfiler(SootClass _class){
 		this._class = _class;
 	}
@@ -42,11 +49,11 @@ public class DynamicProfiler {
 	public void addTransformer(int output_format){
 		PackManager.v().getPack("jtp").add(new Transform("jtp.statementLogger", new Instrumenter()));
 		Options.v().set_output_format(output_format);
-		File dir = new File("./profilingOutput/");
-		dir.mkdirs();
-		for(File f : dir.listFiles()){
-			f.delete();
-		}
+//		File dir = new File("./profilingOutput/");
+//		dir.mkdirs();
+//		for(File f : dir.listFiles()){
+//			f.delete();
+//		}
 		soot.Main.main(new String[]{_class.getName()});
 	}
 	
@@ -59,141 +66,242 @@ public class DynamicProfiler {
 		}
 	}
 	
-	public void analyzeFile(File file){
+	public void analyzeFile(String originalName, boolean remote){
+		if(!remote)
+			FILE_LOCATION=PrintInfo.FILE_LOCATION;
 		String line;
 		
-		HashMap<Path<Unit>, Integer> pathCounts = new HashMap<>();
+		ArrayList<Pair<Path<Unit>, Integer>> pathCounts = new ArrayList<>();
 		Path<Unit> currPath = new Path<>();
-		Stack<Pair<Path<Unit>, Integer>> prevPaths = new Stack<>();
-		Stack<SootMethod> currCallStack = new Stack<>();
-		HashMap<Path<Unit>, List<Path<Unit>>> backEdges = new HashMap<>();
+		Stack<List<Object>> prevPaths = new Stack<>();
+		Stack<SootMethod> callStack = new Stack<>();
+		Set<Path<Unit>> backEdges = new HashSet<>();
+		Path<Unit> currLoopSegment = new Path<>();
 		int repCount = 0;
+		Unit lastUnit = null;
 		
-		try (BufferedReader reader = new BufferedReader(new FileReader(file));){
-			line = reader.readLine();
-			currCallStack.push(Scene.v().getMethod(line.split(PrintInfo.DIVIDER)[0]));//The first method
-			int count = 0;
-			long startTime = System.currentTimeMillis();
-			int unitDeletion = 0;
-			Unit lastUnit = null;
-			findAllUnits: 
-				do {
-					count++;
-					if(count % 100000 == 0)
-						System.out.println(count+": "+": "+pathCounts.size()+": "+pathSize(pathCounts)+": "+traversedPaths(pathCounts)+": "+(count-unitDeletion)+": "+prevPaths.size()+": "+(System.currentTimeMillis()-startTime)/1000);
-					
-					
-					String[] info = line.split(PrintInfo.DIVIDER);
-					SootMethod currMeth = Scene.v().getMethod(info[0]);
-					for(Unit unit : currMeth.retrieveActiveBody().getUnits()){
-						if(unit.toString().equals(info[1])){
+		int count = 0;
+		long startTime = System.currentTimeMillis();
+		int unitDeletion = 0;
+		
+		File toRead = new File(PrintInfo.FILE_LOCATION+originalName+"1.txt");
+		int fileNumber = 1;
+		
+		while(toRead.exists()){
+			try (BufferedReader reader = new BufferedReader(new FileReader(toRead))){
+				line = reader.readLine();
+				if(fileNumber == 1)
+					callStack.push(Scene.v().getMethod(line.split(PrintInfo.DIVIDER)[0]));//push the first method on (We call main)
+				while(line != null){
+					boolean found = false;
+					String methodSignature = line.split(PrintInfo.DIVIDER)[0];
+					String unitString = line.split(PrintInfo.DIVIDER)[1];
+					SootMethod meth = Scene.v().getMethod(methodSignature);
+					for(Unit unit : meth.retrieveActiveBody().getUnits()){
+						if(unit.toString().equals(unitString)){
+							found = true;
 							
-							if(!currPath.contains(unit)){//First, add the unit on
-								List<Path<Unit>> lastBackEdges = backEdges.get(currPath);
-								backEdges.remove(currPath);
+							count++;
+							if(count % 1000000 == 0){
+									System.out.println("["+originalName+"] Number of statements processed: "+count+
+											", \n\tAmount of back paths: "+backEdges.size()+
+											", \n\tCurrent repCount: "+repCount+
+											", \n\tNumber of found paths: "+pathCounts.size()+
+											", \n\tThe total length of those paths: "+pathSize(pathCounts)+
+											", \n\tNumber of times those paths have been traversed: "+traversedPaths(pathCounts)+
+											", \n\tThe amount of units used:"+(count-unitDeletion)+
+											", \n\tThe amount of paths in the stack:"+prevPaths.size()+
+											", \n\tTime elapsed:"+(System.currentTimeMillis()-startTime)/1000);
+							}
+							if(!meth.equals(callStack.peek())){
+								if(lastUnit instanceof JReturnStmt || lastUnit instanceof JReturnVoidStmt || lastUnit instanceof JRetStmt){
+									SootMethod method_ended = callStack.pop();
+									if(!method_ended.getDeclaringClass().equals(meth.getDeclaringClass())){
+										//Path ends, go back to last path we were making
+										boolean inMap = false;
+										int location;
+										for(location = 0; location < pathCounts.size(); location++){
+											if(pathCounts.get(location).first().equals(currPath)){
+												inMap = true;
+												break;
+											}
+										}
+										if(inMap){
+											//System.out.println("["+originalName+"] Went along a previous path");
+											pathCounts.get(location).setSecond(new Integer(pathCounts.get(location).second()+1+repCount+backEdges.size()));
+										} else {
+											//System.out.println("["+originalName+"] Found a new path");
+											pathCounts.add(new Pair<>(currPath, new Integer(1+repCount+backEdges.size())));
+										}
+										List<Object> next = prevPaths.pop();
+										currPath = (Path<Unit>) next.get(0);
+										repCount = (int) next.get(1);
+										backEdges = (Set<Path<Unit>>) next.get(2);
+										currLoopSegment = (Path<Unit>) next.get(3);
+									}
+								} else if(!meth.getDeclaringClass().equals(callStack.peek().getDeclaringClass())){
+									if(meth.isStatic() && meth.isEntryMethod() && meth.getName().equals("<clinit>")){
+										if(getMethodCalled(lastUnit) != null)
+											callStack.push(getMethodCalled(lastUnit));//static initializer, which is IMPLICIT
+									}
+									//Had to be an invoke, and it is to a different class
+									List<Object> prevInfo = new ArrayList<>();
+									prevInfo.add(currPath);
+									prevInfo.add(repCount);
+									prevInfo.add(backEdges);
+									prevInfo.add(currLoopSegment);
+									prevPaths.push(prevInfo);
+									currPath = new Path<>();
+									repCount = 0;
+									backEdges = new HashSet<>();
+									currLoopSegment = new Path<>();
+									callStack.push(meth);
+								} else {
+									callStack.push(meth);
+								}
+							} else {
+								if(lastUnit instanceof JReturnStmt || lastUnit instanceof JReturnVoidStmt || lastUnit instanceof JRetStmt){
+									callStack.pop();
+								} else if(lastUnit instanceof JInvokeStmt || lastUnit instanceof JAssignStmt){//Only checks for recursion
+									SootMethod method_called = getMethodCalled(lastUnit);
+									if(method_called != null){
+										if(Scene.v().getApplicationClasses().contains(method_called.getDeclaringClass()))
+											callStack.push(meth);
+									}
+								}
+							}
+							
+							if(!currPath.contains(unit)){
 								currPath.add(unit);
-								backEdges.put(currPath, lastBackEdges);
+								currLoopSegment = new Path<>();
 							} else {
 								unitDeletion++;
-								if(backEdges.get(currPath) == null){
-									backEdges.put(currPath, new ArrayList<Path<Unit>>());
-								}
-								boolean found = false;
-								for(Path<Unit> backPath : backEdges.get(currPath)){
-									if(backPath.contains(unit)){
-										if(backPath.getLast().equals(unit)){
+								if(currLoopSegment.contains(unit)){
+									//this is looping within a loop
+									boolean foundPath = false;
+									for(Path<Unit> loopedPath : backEdges){
+										if(loopedPath.equals(currLoopSegment)){
+											foundPath = true;
 											repCount++;
-											found = true;
+											break;
 										}
-										break;
-									} else if(backPath.contains(lastUnit)){
-										backPath.add(unit);
-										found = true;
-										break;
 									}
-								}
-								if(!found){
-									Path<Unit> toAdd = new Path<>();
-									toAdd.add(unit);
-									backEdges.get(currPath).add(toAdd);
+									if(!foundPath){
+										backEdges.add(currLoopSegment);
+									}
+									currLoopSegment = new Path<>();
+								} else {
+									currLoopSegment.add(unit);
 								}
 							}
 							
-							if(unit instanceof JRetStmt || unit instanceof JReturnStmt || unit instanceof JReturnVoidStmt){
-								SootMethod lastMethod = currCallStack.pop();
-								if(!currCallStack.peek().getDeclaringClass().equals(lastMethod.getDeclaringClass())){
-									int backEdgeCount = 0;
-									if(backEdges.get(currPath) != null){
-										backEdgeCount = backEdges.get(currPath).size();
-									}
-									if(pathCounts.get(currPath) == null){
-										pathCounts.put(currPath, new Integer(repCount+1+backEdgeCount));
-										System.out.println("Found new path: "+repCount);
-									} else {
-										System.out.println("Found a path, adding to it's count");
-										pathCounts.put(currPath, new Integer(pathCounts.get(currPath).intValue()+1+repCount+backEdgeCount));
-									}
-									Pair<Path<Unit>, Integer> nextPath = prevPaths.pop();
-									System.out.println(":"+repCount);
-									repCount = nextPath.second().intValue();
-									System.out.println(repCount);
-									currPath = nextPath.first();
-								}
-							} else if(unit instanceof JInvokeStmt){
-								SootMethod methodCalled = ((JInvokeStmt) unit).getInvokeExpr().getMethod();
-								if(!methodCalled.getDeclaringClass().equals(currCallStack.peek().getDeclaringClass())){
-									prevPaths.push(new Pair<>(currPath, new Integer(repCount)));
-									repCount = 0;
-									currPath = new Path<>();
-								}
-								currCallStack.push(methodCalled);
-
-							} else if(unit instanceof JAssignStmt){
-								for(ValueBox vb : unit.getUseBoxes()){
-									if(vb.getClass().getSimpleName().equals("LinkedRValueBox")){
-										if(vb.getValue() instanceof InvokeExpr){
-											SootMethod methodCalled = ((InvokeExpr) vb.getValue()).getMethod();
-											if(!methodCalled.getDeclaringClass().equals(currCallStack.peek().getDeclaringClass())){
-												prevPaths.push(new Pair<>(currPath, new Integer(repCount)));
-												repCount = 0;
-												currPath = new Path<>();
-											}
-											currCallStack.push(methodCalled);
-										}
-									}
-								}
-							}
 							lastUnit = unit;
-							continue findAllUnits;
+							break;
 						}
 					}
-					throw new Error("No unit matches the string: "+info[1]);
-				} while((line=reader.readLine()) != null);
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new Error("Error while reading from the file");
+					if(found){
+						line = reader.readLine();
+						continue;
+					}
+					throw new Error("Unit not found"+unitString);
+				}
+				
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			System.out.println("["+originalName+"] Finished file "+fileNumber);
+			fileNumber++;
+			toRead = new File(PrintInfo.FILE_LOCATION+originalName+fileNumber+".txt");
 		}
 		
-		System.out.println("Finished reading from the file");
-
-		for(Path<Unit> path : pathCounts.keySet()){
-			System.out.println(path);
-			System.out.println(pathCounts.get(path));
+		System.out.println("Finished reading from the files");
+		System.out.println(currPath);
+		if(!currPath.equals(new Path<>())){
+			boolean inMap = false;
+			int location;
+			for(location = 0; location < pathCounts.size(); location++){
+				if(pathCounts.get(location).first().equals(currPath)){
+					inMap = true;
+					break;
+				}
+			}
+			if(inMap){
+				System.out.println("["+originalName+"] Went along a previous path");
+				pathCounts.get(location).setSecond(new Integer(pathCounts.get(location).second()+1+repCount+backEdges.size()));
+			} else {
+				System.out.println("["+originalName+"] Found a new path");
+				pathCounts.add(new Pair<>(currPath, new Integer(1+repCount+backEdges.size())));
+			}
+		}
+		System.out.println(prevPaths);
+		for(List<Object> paths : prevPaths){
+			currPath = (Path<Unit>) paths.get(0);
+			repCount = ((Integer) paths.get(1)).intValue();
+			backEdges = (Set<Path<Unit>>) paths.get(2);
+			currLoopSegment = (Path<Unit>) paths.get(3);
+			boolean inMap = false;
+			int location;
+			for(location = 0; location < pathCounts.size(); location++){
+				if(pathCounts.get(location).first().equals(currPath)){
+					inMap = true;
+					break;
+				}
+			}
+			if(inMap){
+				System.out.println("["+originalName+"] Went along a previous path");
+				pathCounts.get(location).setSecond(new Integer(pathCounts.get(location).second()+1+repCount+backEdges.size()));
+			} else {
+				System.out.println("["+originalName+"] Found a new path");
+				pathCounts.add(new Pair<>(currPath, new Integer(1+repCount+backEdges.size())));
+			}
+		}
+		File resultDir = new File(PrintInfo.FILE_LOCATION+"results/");
+		resultDir.mkdir();
+		File f = new File(PrintInfo.FILE_LOCATION+"results/results_"+originalName+".txt");
+		
+		try(BufferedWriter bw = new BufferedWriter(new FileWriter(f, true))){
+			f.createNewFile();
+			for(Pair<Path<Unit>, Integer> path : pathCounts){
+				bw.write(path.first().toString()+PrintInfo.DIVIDER);
+				bw.write(path.second()+"\n");
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
-	private int pathSize(HashMap<Path<Unit>, Integer> pathCounts){
+	private SootMethod getMethodCalled(Unit unit){
+		if(unit instanceof JInvokeStmt){
+			return ((JInvokeStmt) unit).getInvokeExpr().getMethod();
+		} else if(unit instanceof JAssignStmt){
+			for(ValueBox vb : unit.getUseBoxes()){
+				if(vb.getClass().getSimpleName().equals("LinkedRValueBox")){
+					if(vb.getValue() instanceof InvokeExpr){
+						return ((InvokeExpr) vb.getValue()).getMethod();
+					}
+				}
+			}
+		}
+		return null;
+	}
+	
+	private int pathSize(List<Pair<Path<Unit>, Integer>> pathCounts){
 		int total = 0;
-		for(Path<Unit> p : pathCounts.keySet()){
-			total += p.size();
+		for(Pair<Path<Unit>, Integer> p : pathCounts){
+			total += p.first().size();
 		}
 		return total;
 	}
 	
-	private int traversedPaths(HashMap<Path<Unit>, Integer> pathCounts){
+	private int traversedPaths(List<Pair<Path<Unit>, Integer>>  pathCounts){
 		int total = 0;
-		for(Path<Unit> p : pathCounts.keySet()){
-			total += pathCounts.get(p).intValue();
+		for(Pair<Path<Unit>, Integer> p : pathCounts){
+			total += p.second().intValue();
 		}
 		return total;
 	}
