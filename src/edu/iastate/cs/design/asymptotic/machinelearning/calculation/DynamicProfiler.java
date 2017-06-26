@@ -207,11 +207,11 @@ public class DynamicProfiler {
 				}
 				
 			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
+				throw new Error("The data file couldn't be found! "+fileNumber);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
+				throw new Error("Error occured while reading the data!");
 			}
 			System.out.println("["+originalName+"] Finished file "+fileNumber);
 			fileNumber++;
@@ -270,8 +270,8 @@ public class DynamicProfiler {
 				bw.write(path.second()+"\n");
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			throw new Error("Error occurred while writing to the results file!");
 		}
 	}
 	

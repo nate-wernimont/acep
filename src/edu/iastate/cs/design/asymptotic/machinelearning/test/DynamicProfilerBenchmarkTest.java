@@ -17,7 +17,6 @@ public class DynamicProfilerBenchmarkTest {
 		String b = args[0];
 		String config = b + File.separator + "config.xml";
 		Benchmark benchmark = new Test(config);
-		Scene.v().loadNecessaryClasses();
 		
 		DynamicProfiler dp = new DynamicProfiler(Scene.v().getMainClass());
 		dp.addTransformer(Options.v().output_format_jimple);

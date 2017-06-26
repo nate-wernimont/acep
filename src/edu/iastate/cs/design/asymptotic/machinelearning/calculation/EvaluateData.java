@@ -1,10 +1,16 @@
 package edu.iastate.cs.design.asymptotic.machinelearning.calculation;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
+import edu.iastate.cs.design.asymptotic.datastructures.Pair;
 import edu.iastate.cs.design.asymptotic.machinelearning.calculation.FeatureStatistic.Count;
 import edu.iastate.cs.design.asymptotic.machinelearning.calculation.FeatureStatistic.Coverage;
 import edu.iastate.cs.design.asymptotic.tests.benchmarks.Benchmark;
@@ -21,47 +27,104 @@ import weka.core.Instances;
 
 public class EvaluateData {
 
-	String[] _training_configs, _eval_configs;
+	private List<String> _training_configs, _eval_configs;
 	
-	Classifier _classifier;
+	private Classifier _classifier;
 	
-	Instances training_data = null, eval_data = null;
+	private Instances training_data = null, eval_data = null;
 	
-	HashMap<Path<Unit>, FeatureStatistic> training_statistics, eval_statistics;
+	private HashMap<Path<Unit>, FeatureStatistic> training_statistics, eval_statistics;
 	
-	String _name;
+	private static final double HOT_PATH_PERCENTAGE = .10;
 	
-	List<Path<Unit>> _hot_paths;
+	private String _name;
 	
-	Evaluation evaluator = null;
+	private List<Path<Unit>> _hot_paths;
+	
+	private Evaluation evaluator = null;
 	
 	/**
-	 * Construct the class for evaluating the data
-	 * @param training_configs Paths to each config file for the training set
-	 * @param eval_configs Paths to each config file for the test set
-	 * @param classifier The classifier to use
-	 * @param name The name of the test
-	 * @param hotPaths A List of all of the hot paths
+	 * Evaluate the data
+	 * @param training_configs String array of all of the training config names
+	 * @param eval_configs String array of the configs to evaluate
+	 * @param classifier Classifier to use
+	 * @param name Name of the test
 	 */
-	public EvaluateData(String[] training_configs, String[] eval_configs, Classifier classifier, String name, List<Path<Unit>> hotPaths){
+	public EvaluateData(List<String> training_configs, List<String> eval_configs, Classifier classifier, String name){
 		_training_configs = training_configs;
 		_eval_configs = eval_configs;
 		_classifier = classifier;
 		_name = name;
-		_hot_paths = hotPaths;
 		training_statistics = new HashMap<Path<Unit>, FeatureStatistic>();
 		eval_statistics = new HashMap<Path<Unit>, FeatureStatistic>();
 	}
 	
 	public void run(){
+		System.out.println("Collecting Statistics");
 		collectStatistics(_training_configs, training_statistics);
 		collectStatistics(_eval_configs, eval_statistics);
+		System.out.println("Evaluating Data");
 		generateData(training_data, training_statistics);
 		generateData(eval_data, eval_statistics);
 		try {
+			System.out.println("Evalauting data");
 			evaluateWeka();
 		} catch (Exception e) {
 			throw new Error("Weka encountered an error");
+		}
+	}
+	
+	public List<Pair<Path<Unit>, Integer>> collectResults(String filename, List<Path<Unit>> possiblePaths){
+		List<Pair<Path<Unit>, Integer>> result = new ArrayList<>();
+		File results = new File(filename);
+		try(BufferedReader reader = new BufferedReader(new FileReader(results))){
+			String line;
+			while((line = reader.readLine()) != null){
+				String path = line.split(PrintInfo.DIVIDER)[0];
+				int pathCount = Integer.parseInt(line.split(PrintInfo.DIVIDER)[1]);
+				boolean found = false;
+				for(Path<Unit> possiblePath : possiblePaths){
+					if(possiblePath.toString().equals(path)){
+						found = true;
+						result.add(new Pair<>(possiblePath, new Integer(pathCount)));
+						break;
+					}
+				}
+				if(!found)
+					System.out.println("Path Not Found: "+path);
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			throw new Error("The results file couldn't be found!");
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new Error("Error encountered while reading from results file!");
+		}
+		return result;
+	}
+	
+	public void getHotPaths(List<Pair<Path<Unit>, Integer>> pathCounts){
+		for(int evaluating = 0; evaluating < pathCounts.size(); evaluating++){
+			boolean added = false;
+			for(int comparing = evaluating-1; comparing >= 0; comparing--){
+				if(pathCounts.get(evaluating).second() > pathCounts.get(comparing).second())
+					continue;
+				else {
+					pathCounts.add(comparing+1, pathCounts.get(evaluating));
+					pathCounts.remove(evaluating+1);
+					added = true;
+					break;
+				}
+			}
+			if(!added){
+				pathCounts.add(0, pathCounts.get(evaluating));
+				pathCounts.remove(evaluating+1);
+			}
+		}
+		
+		int limit = (int) (pathCounts.size() * HOT_PATH_PERCENTAGE);
+		for(int i = 0; i < limit; i++){
+			_hot_paths.add(pathCounts.get(i).first());
 		}
 	}
 	
@@ -72,17 +135,24 @@ public class EvaluateData {
 		System.out.println(evaluator.correct()+", "+evaluator.incorrect());
 	}
 	
-	private void collectStatistics(String[] configs, HashMap<Path<Unit>, FeatureStatistic> map){
-		for(String config : configs){
+	private void collectStatistics(List<String> _training_configs2, HashMap<Path<Unit>, FeatureStatistic> map){
+		for(String config : _training_configs2){
 			new Test(config);
+			
+			List<Path<Unit>> possiblePaths = new ArrayList<>();
+			
 			for(SootClass _class : Scene.v().getApplicationClasses()){
 				if(_class.isLibraryClass() || _class.isJavaLibraryClass() || !_class.isConcrete()){
 					continue;
 				}
 				PathEnumerator calculateInfo = new PathEnumerator(_class);
 				calculateInfo.run();
+				possiblePaths.addAll(calculateInfo.getPaths());
 				map.putAll(calculateInfo.getFeatureStatistics());
 			}
+			
+			getHotPaths(collectResults("/Users/natemw/Documents/acep/results/results_"+Scene.v().getMainClass().getShortName()+".txt", possiblePaths));
+			
 			for(SootClass _class : Scene.v().getClasses()){//Reset the scene
 				Scene.v().removeClass(_class);
 			}

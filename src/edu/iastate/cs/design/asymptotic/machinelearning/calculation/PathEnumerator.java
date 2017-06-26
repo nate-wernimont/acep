@@ -151,11 +151,16 @@ public class PathEnumerator {
 							updateMethodsCalled = new FeatureStatistic();
 							features.put(original_path, updateMethodsCalled);
 						}
+						List<Unit> oldVisitedMeths = visitedMeths.get(original_path);
+						if(oldVisitedMeths == null){
+							oldVisitedMeths = new ArrayList<Unit>();
+							visitedMeths.put(original_path, oldVisitedMeths);
+						}
 						if(method_called.equals(original_meth)){//local invocation of itself
 							//I do not want this path - it involves an infinite loop and I only want one element of each
 							unit_map.get(original_meth).remove(original_path);
 							features.remove(original_path);
-						} else if(method_called.getDeclaringClass().equals(_class) && !visitedMeths.get(original_path).contains(unit)){
+						} else if(method_called.getDeclaringClass().equals(_class) && !oldVisitedMeths.contains(unit)){
 							for(Path<Unit> path_in_path : unit_map.get(method_called)){
 								if(original_path.contains(path_in_path.getElements().get(0))){//local invocation of a method that has already been called
 									unit_map.get(original_meth).remove(original_path);
@@ -163,7 +168,6 @@ public class PathEnumerator {
 									continue;
 								}
 								//remake the path
-								List<Unit> oldVisitedMeths = visitedMeths.get(original_path);
 								updateMethodsCalled = new FeatureStatistic(updateMethodsCalled);
 								Path<Unit> newPath = original_path.copy();
 								newPath.insertAfter(unit, path_in_path);
@@ -171,9 +175,10 @@ public class PathEnumerator {
 								paths.remove(original_path);
 								paths.add(newPath);
 								unit_map.put(original_meth, paths);
-								oldVisitedMeths.add(unit);
+								List<Unit> updateVisitedMeths = new ArrayList<>(oldVisitedMeths);
+								updateVisitedMeths.add(unit);
 								visitedMeths.remove(original_path);
-								visitedMeths.put(newPath, oldVisitedMeths);
+								visitedMeths.put(newPath, updateVisitedMeths);
 								changed = true;
 								
 								//Update featurecount
@@ -216,7 +221,12 @@ public class PathEnumerator {
 				for(Unit unit : original_path.getElements()){
 					SootMethod method_called = methodInvocation(unit);
 					if(method_called != null){
-						if(method_called.getDeclaringClass().equals(_class) && !method_called.equals(original_meth)){
+						List<Unit> oldVisitedMeths = visitedMeths.get(original_path);
+						if(oldVisitedMeths == null){
+							oldVisitedMeths = new ArrayList<Unit>();
+							visitedMeths.put(original_path, oldVisitedMeths);
+						}
+						if(method_called.getDeclaringClass().equals(_class) && !method_called.equals(original_meth) && !oldVisitedMeths.contains(unit)){
 							for(Path<Unit> path_in_path : unit_map.get(method_called)){
 								if(original_path.contains(path_in_path.getElements().get(0)))//local invocation of a method that has already been called
 									continue;
@@ -230,6 +240,10 @@ public class PathEnumerator {
 								paths.add(newPath);
 								unit_map.put(original_meth, paths);
 								changed = true;
+								List<Unit> updateVisitedMeths = new ArrayList<>(oldVisitedMeths);
+								updateVisitedMeths.add(unit);
+								visitedMeths.remove(original_path);
+								visitedMeths.put(newPath, updateVisitedMeths);
 								
 								//Propagate the features count
 								FeatureStatistic feature = features.get(original_path);
@@ -470,6 +484,14 @@ public class PathEnumerator {
 	 */
 	public HashMap<Path<Unit>, FeatureStatistic> getFeatureStatistics(){
 		return features;
+	}
+	
+	public List<Path<Unit>> getPaths(){
+		List<Path<Unit>> paths = new ArrayList<>();
+		for(SootMethod sm : unit_map.keySet()){
+			paths.addAll(unit_map.get(sm));
+		}
+		return paths;
 	}
 	
 }
