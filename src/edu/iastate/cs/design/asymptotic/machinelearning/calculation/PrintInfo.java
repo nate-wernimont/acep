@@ -9,7 +9,7 @@ public class PrintInfo {
 	
 	public static final String DIVIDER = "~~~";
 
-	public static final String FILE_LOCATION = "/Users/natemw/Documents/acep/profilingOutput/";//Local: /Users/natemw/Documents/acep/profilingOutput/
+	public static final String FILE_LOCATION = "/home/ganeshau/nat/";//Local: /Users/natemw/Documents/acep/profilingOutput/
 	
 	private static final int GB = 1024*1024*1024;
 	

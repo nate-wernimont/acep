@@ -19,7 +19,7 @@ public class DynamicProfilerBenchmarkTest {
 		Benchmark benchmark = new Test(config);
 		
 		DynamicProfiler dp = new DynamicProfiler(Scene.v().getMainClass());
-		dp.addTransformer(Options.v().output_format_jimple);
-		//dp.analyzeFile(Scene.v().getMainClass().getShortName(), false);
+		//dp.addTransformer(Options.v().output_format_class);
+		dp.analyzeFile(Scene.v().getMainClass().getShortName(), true);
 	}
 }

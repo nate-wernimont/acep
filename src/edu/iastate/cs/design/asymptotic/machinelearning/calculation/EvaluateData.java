@@ -57,6 +57,7 @@ public class EvaluateData {
 		_name = name;
 		training_statistics = new HashMap<Path<Unit>, FeatureStatistic>();
 		eval_statistics = new HashMap<Path<Unit>, FeatureStatistic>();
+		_hot_paths = new ArrayList<>();
 	}
 	
 	public void run(){
@@ -92,6 +93,8 @@ public class EvaluateData {
 				}
 				if(!found)
 					System.out.println("Path Not Found: "+path);
+				else
+					System.out.println("Path Found! "+path);
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -104,6 +107,8 @@ public class EvaluateData {
 	}
 	
 	public void getHotPaths(List<Pair<Path<Unit>, Integer>> pathCounts){
+		System.out.println(pathCounts.size());
+		System.out.println(pathCounts);
 		for(int evaluating = 0; evaluating < pathCounts.size(); evaluating++){
 			boolean added = false;
 			for(int comparing = evaluating-1; comparing >= 0; comparing--){
@@ -121,9 +126,11 @@ public class EvaluateData {
 				pathCounts.remove(evaluating+1);
 			}
 		}
-		
+		System.out.println(pathCounts);
 		int limit = (int) (pathCounts.size() * HOT_PATH_PERCENTAGE);
+		System.out.println("Getting first "+limit+" paths from "+pathCounts.size());
 		for(int i = 0; i < limit; i++){
+			System.out.println(pathCounts.get(i));
 			_hot_paths.add(pathCounts.get(i).first());
 		}
 	}
@@ -151,7 +158,7 @@ public class EvaluateData {
 				map.putAll(calculateInfo.getFeatureStatistics());
 			}
 			
-			getHotPaths(collectResults("/Users/natemw/Documents/acep/results/results_"+Scene.v().getMainClass().getShortName()+".txt", possiblePaths));
+			getHotPaths(collectResults("results/results_"+Scene.v().getMainClass().getShortName()+".txt", possiblePaths));
 			
 			for(SootClass _class : Scene.v().getClasses()){//Reset the scene
 				Scene.v().removeClass(_class);

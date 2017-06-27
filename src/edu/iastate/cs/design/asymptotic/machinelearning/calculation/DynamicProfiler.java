@@ -67,8 +67,7 @@ public class DynamicProfiler {
 	}
 	
 	public void analyzeFile(String originalName, boolean remote){
-		if(!remote)
-			FILE_LOCATION=PrintInfo.FILE_LOCATION;
+		FILE_LOCATION=PrintInfo.FILE_LOCATION;
 		String line;
 		
 		ArrayList<Pair<Path<Unit>, Integer>> pathCounts = new ArrayList<>();
@@ -116,6 +115,9 @@ public class DynamicProfiler {
 							if(!meth.equals(callStack.peek())){
 								if(lastUnit instanceof JReturnStmt || lastUnit instanceof JReturnVoidStmt || lastUnit instanceof JRetStmt){
 									SootMethod method_ended = callStack.pop();
+									if(!meth.equals(callStack.peek())){
+										throw new Error("Returning to an unknown method: "+meth+", "+callStack.peek());
+									}
 									if(!method_ended.getDeclaringClass().equals(meth.getDeclaringClass())){
 										//Path ends, go back to last path we were making
 										boolean inMap = false;
@@ -140,9 +142,18 @@ public class DynamicProfiler {
 										currLoopSegment = (Path<Unit>) next.get(3);
 									}
 								} else if(!meth.getDeclaringClass().equals(callStack.peek().getDeclaringClass())){
-									if(meth.isStatic() && meth.isEntryMethod() && meth.getName().equals("<clinit>")){
-										if(getMethodCalled(lastUnit) != null)
-											callStack.push(getMethodCalled(lastUnit));//static initializer, which is IMPLICIT
+									if(meth.isStatic() && meth.isEntryMethod() && meth.getName().equals("<clinit>") && getMethodCalled(lastUnit) != null){
+										List<Object> prevInfo2 = new ArrayList<>();
+										prevInfo2.add(currPath);
+										prevInfo2.add(repCount);
+										prevInfo2.add(backEdges);
+										prevInfo2.add(currLoopSegment);
+										prevPaths.push(prevInfo2);
+										currPath = new Path<>();
+										repCount = 0;
+										backEdges = new HashSet<>();
+										currLoopSegment = new Path<>();
+										callStack.push(getMethodCalled(lastUnit));//static initializer, which is IMPLICIT
 									}
 									//Had to be an invoke, and it is to a different class
 									List<Object> prevInfo = new ArrayList<>();
@@ -156,20 +167,23 @@ public class DynamicProfiler {
 									backEdges = new HashSet<>();
 									currLoopSegment = new Path<>();
 									callStack.push(meth);
+									
 								} else {
 									callStack.push(meth);
 								}
-							} else {
-								if(lastUnit instanceof JReturnStmt || lastUnit instanceof JReturnVoidStmt || lastUnit instanceof JRetStmt){
-									callStack.pop();
-								} else if(lastUnit instanceof JInvokeStmt || lastUnit instanceof JAssignStmt){//Only checks for recursion
-									SootMethod method_called = getMethodCalled(lastUnit);
-									if(method_called != null){
-										if(Scene.v().getApplicationClasses().contains(method_called.getDeclaringClass()))
-											callStack.push(meth);
-									}
-								}
 							}
+							//What is the point? All we are doing is modifying the call stack for what will eventually be returned with no added benefits.
+//							} else {//we are in the same method. Check for recursion
+//								if(lastUnit instanceof JReturnStmt || lastUnit instanceof JReturnVoidStmt || lastUnit instanceof JRetStmt){
+//									callStack.pop();
+//								} else if(lastUnit instanceof JInvokeStmt || lastUnit instanceof JAssignStmt){//Only checks for recursion
+//									SootMethod method_called = getMethodCalled(lastUnit);
+//									if(method_called != null){
+//										if(Scene.v().getApplicationClasses().contains(method_called.getDeclaringClass()))
+//											callStack.push(meth);
+//									}
+//								}
+//							}
 							
 							if(!currPath.contains(unit)){
 								currPath.add(unit);
@@ -177,7 +191,7 @@ public class DynamicProfiler {
 							} else {
 								unitDeletion++;
 								if(currLoopSegment.contains(unit)){
-									//this is looping within a loop
+									//this is looping on itself
 									boolean foundPath = false;
 									for(Path<Unit> loopedPath : backEdges){
 										if(loopedPath.equals(currLoopSegment)){

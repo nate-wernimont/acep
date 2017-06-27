@@ -155,7 +155,7 @@ public class Benchmark {
 			cp = cp + processdir + pathSeparator;
 		}
 		cp = cp + _LIB;
-		cp += ":/Users/natemw/Documents/acep/bin";//MINE TODO:
+		cp += ":bin";//MINE TODO:
 		_classpath = cp;
 	}
 
