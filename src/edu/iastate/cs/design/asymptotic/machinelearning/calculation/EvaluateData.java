@@ -25,22 +25,52 @@ import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instances;
 
+/**
+ * 
+ * Evaluates the given data using Weka
+ * @author Nate Wernimont
+ *
+ */
 public class EvaluateData {
 
+	/**
+	 * The configs of the benchmarks to evaluate
+	 */
 	private List<String> _training_configs, _eval_configs;
 	
+	/**
+	 * The classifier to analyze the data with
+	 */
 	private Classifier _classifier;
 	
+	/**
+	 * The instances containing either the training or eval data
+	 */
 	private Instances training_data = null, eval_data = null;
 	
+	/**
+	 * A mapping from all of the paths to their respective FeatureStatistic
+	 */
 	private HashMap<Path<Unit>, FeatureStatistic> training_statistics, eval_statistics;
 	
+	/**
+	 * The percentage of the paths to mark as hot
+	 */
 	private static final double HOT_PATH_PERCENTAGE = .10;
 	
+	/**
+	 * The name of the test
+	 */
 	private String _name;
 	
+	/**
+	 * List of all of the hot paths
+	 */
 	private List<Path<Unit>> _hot_paths;
 	
+	/**
+	 * The evaluator object
+	 */
 	private Evaluation evaluator = null;
 	
 	/**
@@ -60,6 +90,9 @@ public class EvaluateData {
 		_hot_paths = new ArrayList<>();
 	}
 	
+	/**
+	 * Executes the object to produce the Weka data
+	 */
 	public void run(){
 		System.out.println("Collecting Statistics");
 		collectStatistics(_training_configs, training_statistics);
@@ -75,6 +108,12 @@ public class EvaluateData {
 		}
 	}
 	
+	/**
+	 * Collect all of the paths within the File titled filename using a list of the paths that are possible
+	 * @param filename The name of the file
+	 * @param possiblePaths A list of the statically enumerated paths
+	 * @return All of the paths used within the actual execution of the file along with their execution count
+	 */
 	public List<Pair<Path<Unit>, Integer>> collectResults(String filename, List<Path<Unit>> possiblePaths){
 		List<Pair<Path<Unit>, Integer>> result = new ArrayList<>();
 		File results = new File(filename);
@@ -106,6 +145,10 @@ public class EvaluateData {
 		return result;
 	}
 	
+	/**
+	 * Identify all of the hot paths from a given list of paths
+	 * @param pathCounts A list of the paths along with their execution counts
+	 */
 	public void getHotPaths(List<Pair<Path<Unit>, Integer>> pathCounts){
 		System.out.println(pathCounts.size());
 		System.out.println(pathCounts);
@@ -135,6 +178,10 @@ public class EvaluateData {
 		}
 	}
 	
+	/**
+	 * Build the classifier and evaluate it on the eval data
+	 * @throws Exception
+	 */
 	private void evaluateWeka() throws Exception {
 		_classifier.buildClassifier(training_data);
 		evaluator = new Evaluation(training_data);
@@ -142,8 +189,13 @@ public class EvaluateData {
 		System.out.println(evaluator.correct()+", "+evaluator.incorrect());
 	}
 	
-	private void collectStatistics(List<String> _training_configs2, HashMap<Path<Unit>, FeatureStatistic> map){
-		for(String config : _training_configs2){
+	/**
+	 * Collect all of the FeatureStatistics and execution counts from the given configs
+	 * @param configs A list of the configs to analyze
+	 * @param map A map in which to put all of the newly found FeatureStatistics
+	 */
+	private void collectStatistics(List<String> configs, HashMap<Path<Unit>, FeatureStatistic> map){
+		for(String config : configs){
 			new Test(config);
 			
 			List<Path<Unit>> possiblePaths = new ArrayList<>();
@@ -166,6 +218,11 @@ public class EvaluateData {
 		}
 	}
 	
+	/**
+	 * Puts all of the feature statistics and hot path information into Weka usable data objects
+	 * @param data Where to put the newly created data
+	 * @param statistics The object containing all of the original information
+	 */
 	private void generateData(Instances data, HashMap<Path<Unit>, FeatureStatistic> statistics){
 		//Create data framework
 		ArrayList<Attribute> attributes = new ArrayList<Attribute>();

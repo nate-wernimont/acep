@@ -44,6 +44,11 @@ import soot.toolkits.graph.BriefBlockGraph;
 import soot.toolkits.graph.BriefUnitGraph;
 import soot.toolkits.graph.UnitGraph;
 
+/**
+ * Statically enumerates all of the intra class paths within a given class
+ * @author Nate Wernimont
+ *
+ */
 public class PathEnumerator {
 
 	/**
@@ -77,6 +82,9 @@ public class PathEnumerator {
 		features = new HashMap<Path<Unit>, FeatureStatistic>();
 	}
 	
+	/**
+	 * Generates the block map, unit map, and identifies all of the features along each unit path
+	 */
 	public void run(){
 		System.out.println("===="+_class.getName()+"====");
 		findIntraMethodPaths();
@@ -135,7 +143,7 @@ public class PathEnumerator {
 			initialPass.add(meth);
 		}
 		
-		float maxMethodsVisited = 0;
+		int maxMethodsVisited = 0;
 		
 		//This does a first pass through, which collects the method invocations only from the method that it is analyzing
 		while(!initialPass.isEmpty()){
@@ -191,8 +199,8 @@ public class PathEnumerator {
 							updateMethodsCalled.increment(Count.INVOCATIONS);
 							updateMethodsCalled.increment(Count.NON_LOCAL_INVOCATIONS);
 						}
-						if(updateMethodsCalled.getValue(Count.INVOCATIONS) > maxMethodsVisited)
-							maxMethodsVisited = updateMethodsCalled.getValue(Count.INVOCATIONS);
+						if(((int)updateMethodsCalled.getValue(Count.INVOCATIONS)) > maxMethodsVisited)
+							maxMethodsVisited = (int) updateMethodsCalled.getValue(Count.INVOCATIONS);
 					}
 				}
 			}
@@ -207,7 +215,7 @@ public class PathEnumerator {
 				FeatureStatistic fc = features.get(p);
 				if(fc == null)
 					fc = new FeatureStatistic();
-				fc.setValue(Coverage.INVOCATIONS, fc.getValue(Count.INVOCATIONS)/maxMethodsVisited);
+				fc.setValue(Coverage.INVOCATIONS, ((int)fc.getValue(Count.INVOCATIONS))/maxMethodsVisited);
 				features.put(p, fc);
 			}
 		}
@@ -263,9 +271,9 @@ public class PathEnumerator {
 	 * Calculate all of the feature counts for each path
 	 */
 	private void calculateCounts(){
-		float maxFieldsWritten = 0;
-		float maxVariablesAccessed = 0;
-		float maxParametersUsed = 0;
+		int maxFieldsWritten = 0;
+		int maxVariablesAccessed = 0;
+		int maxParametersUsed = 0;
 		
 		for(SootMethod sm : _class.getMethods()){
 			for(Path<Unit> path : unit_map.get(sm)){
@@ -398,12 +406,12 @@ public class PathEnumerator {
 				feature.setValue(Coverage.FIELDS, (float)fields.size()/_class.getFieldCount());
 				feature.increment(Count.FIELDS, fields.size());
 				
-				if(feature.getValue(Count.FIELDS_WRITTEN) > maxFieldsWritten)
-					maxFieldsWritten = feature.getValue(Count.FIELDS_WRITTEN);
-				if(feature.getValue(Count.LOCAL_VARIABLES) > maxVariablesAccessed)
-					maxVariablesAccessed = feature.getValue(Count.LOCAL_VARIABLES);
-				if(feature.getValue(Count.PARAMETERS) > maxParametersUsed)
-					maxParametersUsed = feature.getValue(Count.PARAMETERS);
+				if(((int)feature.getValue(Count.FIELDS_WRITTEN)) > maxFieldsWritten)
+					maxFieldsWritten = (int) feature.getValue(Count.FIELDS_WRITTEN);
+				if(((int)feature.getValue(Count.LOCAL_VARIABLES)) > maxVariablesAccessed)
+					maxVariablesAccessed = (int) feature.getValue(Count.LOCAL_VARIABLES);
+				if(((int)feature.getValue(Count.PARAMETERS)) > maxParametersUsed)
+					maxParametersUsed = (int) feature.getValue(Count.PARAMETERS);
 				
 				features.put(path, feature);
 			}
@@ -412,9 +420,9 @@ public class PathEnumerator {
 		for(SootMethod sm : _class.getMethods()){
 			for(Path<Unit> p : unit_map.get(sm)){
 				FeatureStatistic feature = features.get(p);
-				feature.setValue(Coverage.FIELDS_WRITTEN, feature.getValue(Count.FIELDS_WRITTEN)/maxFieldsWritten);
-				feature.setValue(Coverage.LOCAL_VARIABLES, feature.getValue(Count.LOCAL_VARIABLES)/maxVariablesAccessed);
-				feature.setValue(Coverage.PARAMETERS, feature.getValue(Count.PARAMETERS)/maxParametersUsed);
+				feature.setValue(Coverage.FIELDS_WRITTEN, ((int)feature.getValue(Count.FIELDS_WRITTEN))/maxFieldsWritten);
+				feature.setValue(Coverage.LOCAL_VARIABLES, ((int)feature.getValue(Count.LOCAL_VARIABLES))/maxVariablesAccessed);
+				feature.setValue(Coverage.PARAMETERS, ((int)feature.getValue(Count.PARAMETERS))/maxParametersUsed);
 				features.put(p, feature);
 			}
 		}
@@ -486,6 +494,10 @@ public class PathEnumerator {
 		return features;
 	}
 	
+	/**
+	 * Extract a list of the unit paths
+	 * @return A list of the unit paths
+	 */
 	public List<Path<Unit>> getPaths(){
 		List<Path<Unit>> paths = new ArrayList<>();
 		for(SootMethod sm : unit_map.keySet()){

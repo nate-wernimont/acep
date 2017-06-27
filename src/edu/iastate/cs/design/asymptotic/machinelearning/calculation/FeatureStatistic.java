@@ -1,8 +1,23 @@
 package edu.iastate.cs.design.asymptotic.machinelearning.calculation;
 
+/**
+ * 
+ * @author Nate Wernimont
+ * An object for storing the feature information of paths
+ */
 public class FeatureStatistic {
 	
-	public enum Count {
+	public interface Feature {
+		int identifier = 0;
+	}
+	
+	/**
+	 * 
+	 * @author nate
+	 * All of the features that are counted
+	 *
+	 */
+	public enum Count implements Feature {
 		COMPARISONS				,
 		NEW						,
 		THIS					,
@@ -29,29 +44,48 @@ public class FeatureStatistic {
 		}
 	}
 	
-	public enum Coverage {
-		FIELDS				(0),
-		FIELDS_WRITTEN		(1),
-		INVOCATIONS			(2),
-		LOCAL_VARIABLES		(3),
-		PARAMETERS			(4);
+	/**
+	 * 
+	 * All of the features that are coverages.
+	 * @author nate
+	 *
+	 */
+	public enum Coverage implements Feature {
+		FIELDS				,
+		FIELDS_WRITTEN		,
+		INVOCATIONS			,
+		LOCAL_VARIABLES		,
+		PARAMETERS			;
 		
 		private int identifier;
 		
-		Coverage(int num){
-			identifier = num;
+		Coverage(){
+			identifier = this.ordinal();
 		}
 	}
 	
+	/**
+	 * The backing of all of the counts
+	 */
 	private int[] counts;
 	
+	/**
+	 * The backing of all of the coverages
+	 */
 	private float[] coverages;
 	
+	/**
+	 * Initialize a new FeatureStatistic
+	 */
 	public FeatureStatistic(){
 		counts = new int[18];
 		coverages = new float[5];
 	}
 	
+	/**
+	 * Copy constructor
+	 * @param that The FeatureStatistic to copy
+	 */
 	public FeatureStatistic(FeatureStatistic that){
 		this();
 		if(that == null)
@@ -64,6 +98,9 @@ public class FeatureStatistic {
 		}
 	}
 	
+	/**
+	 * Reset the counts and coverages
+	 */
 	public void reset(){
 		for(int i : counts){
 			i = 0;
@@ -73,26 +110,47 @@ public class FeatureStatistic {
 		}
 	}
 	
+	/**
+	 * Increment the given feature by 1
+	 * @param feature Feature to increment
+	 */
 	public void increment(Count feature){
 		counts[feature.identifier]++;
 	}
 	
+	/**
+	 * Increment the given feature by amount
+	 * @param feature Feature to increment
+	 * @param amount The amount to increment it by
+	 */
 	public void increment(Count feature, int amount){
 		counts[feature.identifier] += amount;
 	}
 	
-	public int getValue(Count feature){
-		return counts[feature.identifier];
+	/**
+	 * Fetch the value of the given feature
+	 * @param feature Feature to fetch the value of
+	 * @return The value of feature
+	 */
+	public Number getValue(Feature feature){
+		if(feature instanceof Count)
+			return counts[feature.identifier];
+		else
+			return coverages[feature.identifier];
 	}
 	
-	public float getValue(Coverage coverage){
-		return coverages[coverage.identifier];
-	}
-	
+	/**
+	 * Set the value of the coverage
+	 * @param coverage The coverage to set
+	 * @param value The value to set it to
+	 */
 	public void setValue(Coverage coverage, float value){
 		coverages[coverage.identifier] = value;
 	}
 	
+	/**
+	 * Converts this object to a string format
+	 */
 	public String toString(){
 		String result = "====Counts====\n";
 		for(Count feature : Count.values()){

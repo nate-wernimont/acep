@@ -36,16 +36,36 @@ import soot.jimple.internal.JReturnStmt;
 import soot.jimple.internal.JReturnVoidStmt;
 import soot.options.Options;
 
+/**
+ * 
+ * @author Nate Wernimont
+ * Instruments a class and converts execution data into paths
+ *
+ */
 public class DynamicProfiler {
 
+	/**
+	 * The main application class
+	 */
 	SootClass _class;
 	
+	/**
+	 * Where to find the files
+	 */
 	private static String FILE_LOCATION = "";
 	
+	/**
+	 * Initializes an instance of the profiler
+	 * @param _class
+	 */
 	public DynamicProfiler(SootClass _class){
 		this._class = _class;
 	}
 	
+	/**
+	 * Instruments the class of this profiler
+	 * @param output_format The output format of the instrumented code
+	 */
 	public void addTransformer(int output_format){
 		PackManager.v().getPack("jtp").add(new Transform("jtp.statementLogger", new Instrumenter()));
 		Options.v().set_output_format(output_format);
@@ -57,6 +77,9 @@ public class DynamicProfiler {
 		soot.Main.main(new String[]{_class.getName()});
 	}
 	
+	/**
+	 * Run the instrumented class
+	 */
 	public void runNewClass(){//TODO: try to get running
 		Options.v().set_soot_classpath(Options.v().output_dir()+":"+Options.v().soot_classpath());
 		try {
@@ -66,7 +89,10 @@ public class DynamicProfiler {
 		}
 	}
 	
-	public void analyzeFile(String originalName, boolean remote){
+	/**
+	 * Analyze the files that were generated from this profilers instrumented application class
+	 */
+	public void analyzeFiles(){
 		FILE_LOCATION=PrintInfo.FILE_LOCATION;
 		String line;
 		
@@ -83,7 +109,7 @@ public class DynamicProfiler {
 		long startTime = System.currentTimeMillis();
 		int unitDeletion = 0;
 		
-		File toRead = new File(PrintInfo.FILE_LOCATION+originalName+"1.txt");
+		File toRead = new File(PrintInfo.FILE_LOCATION+_class.getShortName()+"1.txt");
 		int fileNumber = 1;
 		
 		while(toRead.exists()){
@@ -102,7 +128,7 @@ public class DynamicProfiler {
 							
 							count++;
 							if(count % 1000000 == 0){
-									System.out.println("["+originalName+"] Number of statements processed: "+count+
+									System.out.println("["+_class.getShortName()+"] Number of statements processed: "+count+
 											", \n\tAmount of back paths: "+backEdges.size()+
 											", \n\tCurrent repCount: "+repCount+
 											", \n\tNumber of found paths: "+pathCounts.size()+
@@ -227,9 +253,9 @@ public class DynamicProfiler {
 				e.printStackTrace();
 				throw new Error("Error occured while reading the data!");
 			}
-			System.out.println("["+originalName+"] Finished file "+fileNumber);
+			System.out.println("["+_class.getShortName()+"] Finished file "+fileNumber);
 			fileNumber++;
-			toRead = new File(PrintInfo.FILE_LOCATION+originalName+fileNumber+".txt");
+			toRead = new File(PrintInfo.FILE_LOCATION+_class.getShortName()+fileNumber+".txt");
 		}
 		
 		System.out.println("Finished reading from the files");
@@ -244,10 +270,10 @@ public class DynamicProfiler {
 				}
 			}
 			if(inMap){
-				System.out.println("["+originalName+"] Went along a previous path");
+				System.out.println("["+_class.getShortName()+"] Went along a previous path");
 				pathCounts.get(location).setSecond(new Integer(pathCounts.get(location).second()+1+repCount+backEdges.size()));
 			} else {
-				System.out.println("["+originalName+"] Found a new path");
+				System.out.println("["+_class.getShortName()+"] Found a new path");
 				pathCounts.add(new Pair<>(currPath, new Integer(1+repCount+backEdges.size())));
 			}
 		}
@@ -266,16 +292,16 @@ public class DynamicProfiler {
 				}
 			}
 			if(inMap){
-				System.out.println("["+originalName+"] Went along a previous path");
+				System.out.println("["+_class.getShortName()+"] Went along a previous path");
 				pathCounts.get(location).setSecond(new Integer(pathCounts.get(location).second()+1+repCount+backEdges.size()));
 			} else {
-				System.out.println("["+originalName+"] Found a new path");
+				System.out.println("["+_class.getShortName()+"] Found a new path");
 				pathCounts.add(new Pair<>(currPath, new Integer(1+repCount+backEdges.size())));
 			}
 		}
 		File resultDir = new File(PrintInfo.FILE_LOCATION+"results/");
 		resultDir.mkdir();
-		File f = new File(PrintInfo.FILE_LOCATION+"results/results_"+originalName+".txt");
+		File f = new File(PrintInfo.FILE_LOCATION+"results/results_"+_class.getShortName()+".txt");
 		
 		try(BufferedWriter bw = new BufferedWriter(new FileWriter(f, true))){
 			f.createNewFile();
@@ -289,6 +315,11 @@ public class DynamicProfiler {
 		}
 	}
 	
+	/**
+	 * Returns the method called by the given unit, or null if no method was called
+	 * @param unit The unit to analyze
+	 * @return The method called by the unit
+	 */
 	private SootMethod getMethodCalled(Unit unit){
 		if(unit instanceof JInvokeStmt){
 			return ((JInvokeStmt) unit).getInvokeExpr().getMethod();
@@ -304,6 +335,11 @@ public class DynamicProfiler {
 		return null;
 	}
 	
+	/**
+	 * Fetches the size of all of the given paths
+	 * @param pathCounts The paths to analyze
+	 * @return The unit count of all of the paths
+	 */
 	private int pathSize(List<Pair<Path<Unit>, Integer>> pathCounts){
 		int total = 0;
 		for(Pair<Path<Unit>, Integer> p : pathCounts){
@@ -312,6 +348,11 @@ public class DynamicProfiler {
 		return total;
 	}
 	
+	/**
+	 * Fetches the number of times the given paths have been traversed
+	 * @param pathCounts The paths to analyze
+	 * @return The total amount of times these paths have been walked over
+	 */
 	private int traversedPaths(List<Pair<Path<Unit>, Integer>>  pathCounts){
 		int total = 0;
 		for(Pair<Path<Unit>, Integer> p : pathCounts){

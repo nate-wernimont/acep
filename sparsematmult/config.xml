@@ -9,7 +9,7 @@
                 <inc>sparsematmult</inc>
         </includes>
         <lib>./sparsematmult/lib</lib>	<!-- lib folder location -->
-        <jre>/Library/Java/JavaVirtualMachines/1.6.0_37-b06-434.jdk/Contents/Home/lib</jre>	<!-- jre location, basically this location needs to contain rt.jar and jce.jar -->
+        <jre>/usr/java/jdk1.8.0_131/jre/lib</jre>	<!-- jre location, basically this location needs to contain rt.jar and jce.jar -->
         <jars>
                 <jar>JG.jar</jar>	<!-- program jar file containing all class files to be analyzed -->
         </jars>
