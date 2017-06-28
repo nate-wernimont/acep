@@ -60,7 +60,7 @@ public class Instrumenter extends BodyTransformer {
 			System.out.println("Processed a new stmt: "+body.getMethod()+": "+u.toString());
 			if(u instanceof JRetStmt || u instanceof JReturnStmt || u instanceof JReturnVoidStmt){
 				units.insertBefore(invStmt, u);
-			} else if (u instanceof JInvokeStmt || u instanceof JGotoStmt || u instanceof JIfStmt || u instanceof JThrowStmt || (u instanceof JAssignStmt && getMethodCalled(u) != null)){
+			} else if (u instanceof JInvokeStmt || u instanceof JGotoStmt || u instanceof JIfStmt || u instanceof JThrowStmt || (u instanceof JAssignStmt && getMethodCalled(u) != null && Scene.v().getApplicationClasses().contains(getMethodCalled(u)))){
 				units.insertBefore(invStmt, u);
 			} else if (u instanceof JIdentityStmt){
 				units.insertBefore(invStmt, last(firstNonIdentity, u, units));
