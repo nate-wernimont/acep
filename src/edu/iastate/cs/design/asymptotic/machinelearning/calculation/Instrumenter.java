@@ -9,6 +9,7 @@ import soot.Scene;
 import soot.SootClass;
 import soot.SootMethod;
 import soot.Unit;
+import soot.ValueBox;
 import soot.jimple.InvokeExpr;
 import soot.jimple.Jimple;
 import soot.jimple.Stmt;
@@ -59,7 +60,7 @@ public class Instrumenter extends BodyTransformer {
 			System.out.println("Processed a new stmt: "+body.getMethod()+": "+u.toString());
 			if(u instanceof JRetStmt || u instanceof JReturnStmt || u instanceof JReturnVoidStmt){
 				units.insertBefore(invStmt, u);
-			} else if (u instanceof JInvokeStmt || u instanceof JGotoStmt || u instanceof JIfStmt || u instanceof JThrowStmt || u instanceof JAssignStmt){
+			} else if (u instanceof JInvokeStmt || u instanceof JGotoStmt || u instanceof JIfStmt || u instanceof JThrowStmt || (u instanceof JAssignStmt && getMethodCalled(u) != null)){
 				units.insertBefore(invStmt, u);
 			} else if (u instanceof JIdentityStmt){
 				units.insertBefore(invStmt, last(firstNonIdentity, u, units));
@@ -91,6 +92,21 @@ public class Instrumenter extends BodyTransformer {
 				return compare;
 			} else if(unit.equals(compare)){
 				return firstNonIdentity;
+			}
+		}
+		return null;
+	}
+	
+	private SootMethod getMethodCalled(Unit unit){
+		if(unit instanceof JInvokeStmt){
+			return ((JInvokeStmt) unit).getInvokeExpr().getMethod();
+		} else if(unit instanceof JAssignStmt){
+			for(ValueBox vb : unit.getUseBoxes()){
+				if(vb.getClass().getSimpleName().equals("LinkedRValueBox")){
+					if(vb.getValue() instanceof InvokeExpr){
+						return ((InvokeExpr) vb.getValue()).getMethod();
+					}
+				}
 			}
 		}
 		return null;
