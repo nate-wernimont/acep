@@ -95,6 +95,9 @@ public class DynamicProfiler {
 	public void analyzeFiles(){
 		FILE_LOCATION=PrintInfo.FILE_LOCATION;
 		String line;
+		PrintInfo logger = new PrintInfo(_class.getShortName());
+		
+		logger.log("["+_class.getShortName()+"] Started executing!");
 		
 		ArrayList<Pair<Path<Unit>, Integer>> pathCounts = new ArrayList<>();
 		Path<Unit> currPath = new Path<>();
@@ -119,25 +122,31 @@ public class DynamicProfiler {
 					callStack.push(Scene.v().getMethod(line.split(PrintInfo.DIVIDER)[0]));//push the first method on (We call main)
 				while(line != null){
 					boolean found = false;
+					
+					count++;
+					if(count % 1000000 == 0){
+							logger.log("["+_class.getShortName()+"] Number of statements processed: "+count+
+									", \n\tAmount of back paths: "+backEdges.size()+
+									", \n\tCurrent repCount: "+repCount+
+									", \n\tNumber of found paths: "+pathCounts.size()+
+									", \n\tThe total length of those paths: "+pathSize(pathCounts)+
+									", \n\tNumber of times those paths have been traversed: "+traversedPaths(pathCounts)+
+									", \n\tThe amount of units used:"+(count-unitDeletion)+
+									", \n\tThe amount of paths in the stack:"+prevPaths.size()+
+									", \n\tTime elapsed:"+(System.currentTimeMillis()-startTime)/1000);
+					}
+					
 					String methodSignature = line.split(PrintInfo.DIVIDER)[0];
 					String unitString = line.split(PrintInfo.DIVIDER)[1];
 					SootMethod meth = Scene.v().getMethod(methodSignature);
+					if(meth.isStatic() && meth.isEntryMethod() && meth.getName().equals("<clinit>")){
+						line = reader.readLine();
+						continue;//throw away all static initializers. They are only executed once.
+					}
 					for(Unit unit : meth.retrieveActiveBody().getUnits()){
 						if(unit.toString().equals(unitString)){
 							found = true;
 							
-							count++;
-							if(count % 1000000 == 0){
-									System.out.println("["+_class.getShortName()+"] Number of statements processed: "+count+
-											", \n\tAmount of back paths: "+backEdges.size()+
-											", \n\tCurrent repCount: "+repCount+
-											", \n\tNumber of found paths: "+pathCounts.size()+
-											", \n\tThe total length of those paths: "+pathSize(pathCounts)+
-											", \n\tNumber of times those paths have been traversed: "+traversedPaths(pathCounts)+
-											", \n\tThe amount of units used:"+(count-unitDeletion)+
-											", \n\tThe amount of paths in the stack:"+prevPaths.size()+
-											", \n\tTime elapsed:"+(System.currentTimeMillis()-startTime)/1000);
-							}
 							if(!meth.equals(callStack.peek())){
 								if(lastUnit instanceof JReturnStmt || lastUnit instanceof JReturnVoidStmt || lastUnit instanceof JRetStmt){
 									SootMethod method_ended = callStack.pop();
@@ -155,10 +164,10 @@ public class DynamicProfiler {
 											}
 										}
 										if(inMap){
-											//System.out.println("["+originalName+"] Went along a previous path");
+											//logger.log("["+originalName+"] Went along a previous path");
 											pathCounts.get(location).setSecond(new Integer(pathCounts.get(location).second()+1+repCount+backEdges.size()));
 										} else {
-											//System.out.println("["+originalName+"] Found a new path");
+											//logger.log("["+originalName+"] Found a new path");
 											pathCounts.add(new Pair<>(currPath, new Integer(1+repCount+backEdges.size())));
 										}
 										List<Object> next = prevPaths.pop();
@@ -168,19 +177,6 @@ public class DynamicProfiler {
 										currLoopSegment = (Path<Unit>) next.get(3);
 									}
 								} else if(!meth.getDeclaringClass().equals(callStack.peek().getDeclaringClass())){
-									if(meth.isStatic() && meth.isEntryMethod() && meth.getName().equals("<clinit>") && getMethodCalled(lastUnit) != null){
-										List<Object> prevInfo2 = new ArrayList<>();
-										prevInfo2.add(currPath);
-										prevInfo2.add(repCount);
-										prevInfo2.add(backEdges);
-										prevInfo2.add(currLoopSegment);
-										prevPaths.push(prevInfo2);
-										currPath = new Path<>();
-										repCount = 0;
-										backEdges = new HashSet<>();
-										currLoopSegment = new Path<>();
-										callStack.push(getMethodCalled(lastUnit));//static initializer, which is IMPLICIT
-									}
 									//Had to be an invoke, and it is to a different class
 									List<Object> prevInfo = new ArrayList<>();
 									prevInfo.add(currPath);
@@ -192,6 +188,14 @@ public class DynamicProfiler {
 									repCount = 0;
 									backEdges = new HashSet<>();
 									currLoopSegment = new Path<>();
+									
+									/*
+									 * The static initializer is a part of the class that is going on next, so a new path is not needed.
+									 * It simply needs to push the actual method that was called onto the stack so that we correctly go back to it.
+									 * This needs to happen before the static initializer method is pushed on below.
+									 */
+//									if(meth.isStatic() && meth.isEntryMethod() && meth.getName().equals("<clinit>") && getMethodCalled(lastUnit) != null)
+//										callStack.push(getMethodCalled(lastUnit));//static initializer, which is IMPLICIT
 									callStack.push(meth);
 									
 								} else {
@@ -217,7 +221,7 @@ public class DynamicProfiler {
 							} else {
 								unitDeletion++;
 								if(currLoopSegment.contains(unit)){
-									//this is looping on itself
+									//this is looPrintInfong on itself
 									boolean foundPath = false;
 									for(Path<Unit> loopedPath : backEdges){
 										if(loopedPath.equals(currLoopSegment)){
@@ -243,7 +247,7 @@ public class DynamicProfiler {
 						line = reader.readLine();
 						continue;
 					}
-					throw new Error("Unit not found"+unitString);
+					throw new Error("Unit not found "+unitString+", "+meth.retrieveActiveBody().getUnits());
 				}
 				
 			} catch (FileNotFoundException e) {
@@ -253,13 +257,13 @@ public class DynamicProfiler {
 				e.printStackTrace();
 				throw new Error("Error occured while reading the data!");
 			}
-			System.out.println("["+_class.getShortName()+"] Finished file "+fileNumber);
+			logger.log("["+_class.getShortName()+"] Finished file "+fileNumber);
 			fileNumber++;
 			toRead = new File(PrintInfo.FILE_LOCATION+_class.getShortName()+fileNumber+".txt");
 		}
 		
-		System.out.println("Finished reading from the files");
-		System.out.println(currPath);
+		logger.log("Finished reading from the files");
+		logger.log(currPath.toString());
 		if(!currPath.equals(new Path<>())){
 			boolean inMap = false;
 			int location;
@@ -270,14 +274,14 @@ public class DynamicProfiler {
 				}
 			}
 			if(inMap){
-				System.out.println("["+_class.getShortName()+"] Went along a previous path");
+				logger.log("["+_class.getShortName()+"] Went along a previous path");
 				pathCounts.get(location).setSecond(new Integer(pathCounts.get(location).second()+1+repCount+backEdges.size()));
 			} else {
-				System.out.println("["+_class.getShortName()+"] Found a new path");
+				logger.log("["+_class.getShortName()+"] Found a new path");
 				pathCounts.add(new Pair<>(currPath, new Integer(1+repCount+backEdges.size())));
 			}
 		}
-		System.out.println(prevPaths);
+		logger.log(prevPaths.toString());
 		for(List<Object> paths : prevPaths){
 			currPath = (Path<Unit>) paths.get(0);
 			repCount = ((Integer) paths.get(1)).intValue();
@@ -292,13 +296,14 @@ public class DynamicProfiler {
 				}
 			}
 			if(inMap){
-				System.out.println("["+_class.getShortName()+"] Went along a previous path");
+				logger.log("["+_class.getShortName()+"] Went along a previous path");
 				pathCounts.get(location).setSecond(new Integer(pathCounts.get(location).second()+1+repCount+backEdges.size()));
 			} else {
-				System.out.println("["+_class.getShortName()+"] Found a new path");
+				logger.log("["+_class.getShortName()+"] Found a new path");
 				pathCounts.add(new Pair<>(currPath, new Integer(1+repCount+backEdges.size())));
 			}
 		}
+		
 		File resultDir = new File(PrintInfo.FILE_LOCATION+"results/");
 		resultDir.mkdir();
 		File f = new File(PrintInfo.FILE_LOCATION+"results/results_"+_class.getShortName()+".txt");
@@ -313,6 +318,7 @@ public class DynamicProfiler {
 			e.printStackTrace();
 			throw new Error("Error occurred while writing to the results file!");
 		}
+		PrintInfo.close();
 	}
 	
 	/**

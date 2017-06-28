@@ -243,10 +243,10 @@ public class EvaluateData {
 			double[] dataValues = new double[training_data.numAttributes()];
 			FeatureStatistic feature = statistics.get(path);
 			for(Count count : FeatureStatistic.Count.values()){
-				dataValues[count.ordinal()] = feature.getValue(count);
+				dataValues[count.ordinal()] = (int) feature.getValue(count);
 			}
 			for(Coverage coverage : FeatureStatistic.Coverage.values()){
-				dataValues[coverage.ordinal()+18] = feature.getValue(coverage);
+				dataValues[coverage.ordinal()+18] = (float) feature.getValue(coverage);
 			}
 			if(_hot_paths.contains(path)){
 				dataValues[data.numAttributes()-1] = hotVals.indexOf("Hot");

@@ -215,7 +215,10 @@ public class PathEnumerator {
 				FeatureStatistic fc = features.get(p);
 				if(fc == null)
 					fc = new FeatureStatistic();
-				fc.setValue(Coverage.INVOCATIONS, ((int)fc.getValue(Count.INVOCATIONS))/maxMethodsVisited);
+				if(maxMethodsVisited > 0)
+					fc.setValue(Coverage.INVOCATIONS, ((int)fc.getValue(Count.INVOCATIONS))/maxMethodsVisited);
+				else
+					fc.setValue(Coverage.INVOCATIONS, 0);
 				features.put(p, fc);
 			}
 		}

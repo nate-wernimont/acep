@@ -13,6 +13,7 @@ import soot.jimple.InvokeExpr;
 import soot.jimple.Jimple;
 import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
+import soot.jimple.internal.JAssignStmt;
 import soot.jimple.internal.JGotoStmt;
 import soot.jimple.internal.JIdentityStmt;
 import soot.jimple.internal.JIfStmt;
@@ -58,7 +59,7 @@ public class Instrumenter extends BodyTransformer {
 			System.out.println("Processed a new stmt: "+body.getMethod()+": "+u.toString());
 			if(u instanceof JRetStmt || u instanceof JReturnStmt || u instanceof JReturnVoidStmt){
 				units.insertBefore(invStmt, u);
-			} else if (u instanceof JInvokeStmt || u instanceof JGotoStmt || u instanceof JIfStmt || u instanceof JThrowStmt){
+			} else if (u instanceof JInvokeStmt || u instanceof JGotoStmt || u instanceof JIfStmt || u instanceof JThrowStmt || u instanceof JAssignStmt){
 				units.insertBefore(invStmt, u);
 			} else if (u instanceof JIdentityStmt){
 				units.insertBefore(invStmt, last(firstNonIdentity, u, units));

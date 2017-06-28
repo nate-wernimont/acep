@@ -23,6 +23,48 @@ public class PrintInfo {
 	
 	private static int fileCount;
 	
+	private BufferedWriter logBW;
+	
+	public PrintInfo(String name){
+		makeLog(name);
+	}
+	
+	private void makeLog(String name){
+		File logDir = new File(FILE_LOCATION+"logs");
+		logDir.mkdir();
+		File log = new File(FILE_LOCATION+"logs/log_"+name+".txt");
+		log.delete();
+		
+		try {
+			log.createNewFile();
+			logBW = new BufferedWriter(new FileWriter(log));
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new Error("Error creating Log");
+		}
+		
+	}
+	
+	public void closeLog(){
+		try {
+			logBW.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new Error("Error trying to close log");
+		}
+	}
+	
+	public void log(String s){
+		try {
+			logBW.write(s);
+			logBW.newLine();
+			logBW.flush();
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new Error("Error writing to log!");
+		}
+	}
+	
 	public static void makeBW(String filename){
 		if(originalName == null){
 			originalName = filename;
