@@ -198,12 +198,13 @@ public class Benchmark {
 		Scene.v().setMainClass(c);
 		// Important step, without which you will not be able to run spark
 		// analysis
+		//Scene.v().addBasicClass("java.io.ObjectStreamClass$MemberSignature", SootClass.HIERARCHY);
+		//Scene.v().addBasicClass("java.util.concurrent.ConcurrentHashMap$Segment", SootClass.HIERARCHY);
 		Scene.v().loadNecessaryClasses();
-		//Scene.v().addBasicClass("java.io.ObjectStreamClass$MemberSignature", SootClass.SIGNATURES);
 		// Spark analysis, true for brief analysis and false for full
-		//CallGraphBuilder.setSparkPointsToAnalysis(true);    <--- UNCOMMENT
+		//CallGraphBuilder.setSparkPointsToAnalysis(true); //   <--- UNCOMMENT
 		// Create callgraph
-		//_cg = new CallGraphDFS(_sootMethod);   <--- UNCOMMENT
+		//_cg = new CallGraphDFS(_sootMethod);//   <--- UNCOMMENT
 	}
 
 	public CallGraphDFS getCallGraph() {

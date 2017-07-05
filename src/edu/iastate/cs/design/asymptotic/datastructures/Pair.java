@@ -1,4 +1,7 @@
 package edu.iastate.cs.design.asymptotic.datastructures;
+
+import java.io.Serializable;
+
 /**
  * Represents a pair of something.
  * @author Sean Mooney
@@ -6,7 +9,7 @@ package edu.iastate.cs.design.asymptotic.datastructures;
  * @param <T1>
  * @param <T2>
  */
-public class Pair <T1, T2>  {
+public class Pair <T1, T2> implements Serializable{
 	private T1 fst; T2 snd;
 	
 	public Pair(T1 t1, T2 t2){

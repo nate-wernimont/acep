@@ -71,6 +71,8 @@ public class PathEnumerator {
 	 */
 	private HashMap<Path<Unit>, FeatureStatistic> features;
 	
+	private boolean _debug = true;
+	
 	/**
 	 * Construct a PathEnumerator using a given class.
 	 * @param _class
@@ -83,12 +85,32 @@ public class PathEnumerator {
 	}
 	
 	/**
+	 * Construct a PathEnumerator using a given class.
+	 * @param _class
+	 */
+	public PathEnumerator(SootClass _class, boolean debug){
+		this(_class);
+		_debug = debug;
+	}
+	
+	/**
 	 * Generates the block map, unit map, and identifies all of the features along each unit path
 	 */
 	public void run(){
-		System.out.println("===="+_class.getName()+"====");
+		if(_debug)
+			System.out.println("===="+_class.getName()+"====");
 		findIntraMethodPaths();
 		blockToUnits();
+		/*for(SootMethod sm : _class.getMethods()){
+			System.out.println("==="+sm.getName()+"===");
+			for(Path<Block> path : block_map.get(sm)){
+				System.out.print("Start -> ");
+				for(Block b : path.getElements()){
+					System.out.print(b.toShortString() + " -> ");
+				}
+				System.out.println("End");
+			}
+		}*/
 		findIntraClassPaths();
 		calculateCounts();
 	}
@@ -107,7 +129,8 @@ public class PathEnumerator {
 			blockSt.push(firstBlock);
 			//Generates all of the possible paths through this method.
 			DFS(blockSt, methodPaths);
-			System.out.println("Finished method: "+method.toString());
+			if(_debug)
+				System.out.println("Finished method: "+method.toString());
 			block_map.put(method, methodPaths);
 		}
 	}
@@ -178,7 +201,11 @@ public class PathEnumerator {
 								//remake the path
 								updateMethodsCalled = new FeatureStatistic(updateMethodsCalled);
 								Path<Unit> newPath = original_path.copy();
-								newPath.insertAfter(unit, path_in_path);
+								if(unit instanceof JAssignStmt){
+									newPath.insertBefore(unit, path_in_path);
+								} else {
+									newPath.insertAfter(unit, path_in_path);
+								}
 								List<Path<Unit>> paths = unit_map.get(original_meth);
 								paths.remove(original_path);
 								paths.add(newPath);
@@ -244,8 +271,11 @@ public class PathEnumerator {
 								
 								//remake the path
 								Path<Unit> newPath = original_path.copy();
-								newPath.insertAfter(unit, path_in_path);
-								newPath.remove(unit);
+								if(unit instanceof JAssignStmt){
+									newPath.insertBefore(unit, path_in_path);
+								} else {
+									newPath.insertAfter(unit, path_in_path);
+								}
 								List<Path<Unit>> paths = unit_map.get(original_meth);
 								paths.remove(original_path);
 								paths.add(newPath);

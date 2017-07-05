@@ -1,5 +1,6 @@
 package edu.iastate.cs.design.asymptotic.machinelearning.calculation;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -9,10 +10,10 @@ import java.util.Stack;
 
 import soot.jimple.toolkits.pointer.nativemethods.NativeMethodNotSupportedException;
 
-public class Path<E> implements List<E> {
+public class Path<E> implements List<E>, Serializable {
 	
 	
-	private class Node{
+	private class Node implements Serializable{
 		
 		private E body;
 		
@@ -85,6 +86,28 @@ public class Path<E> implements List<E> {
 			Node afterCurr = curr.next;
 			for(E eToAdd : elementsToAdd){
 				addBefore(eToAdd, afterCurr);
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	public boolean insertBefore(E addBeforeThis, Path<E> toAdd){
+		boolean found = false;
+		Node curr = root.next;
+		while(curr.next != null){
+			if(curr.body.equals(addBeforeThis)){
+				found = true;
+				break;
+			} else {
+				curr = curr.next;
+			}
+		}
+		if(found){
+			List<E> elementsToAdd = toAdd.getElements();
+			for(E eToAdd : elementsToAdd){
+				addBefore(eToAdd, curr);
 			}
 			return true;
 		} else {
@@ -279,14 +302,14 @@ public class Path<E> implements List<E> {
 	
 	@Override
 	public boolean equals(Object o){
-		if(this == null && o == null)
-			return true;
 		if(o == null || !o.getClass().equals(this.getClass())){
 			return false;
 		}
 		Path<E> that = (Path<E>) o;
 		if(this.size != that.size)
 			return false;
+		if(this.size == 0)
+			return true;
 		Node thisNode = this.root.next;
 		Node thatNode = that.root.next;
 		while(thisNode.body != null){

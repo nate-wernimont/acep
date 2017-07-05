@@ -2,9 +2,11 @@ package edu.iastate.cs.design.asymptotic.machinelearning.calculation;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -117,16 +119,18 @@ public class EvaluateData {
 	public List<Pair<Path<Unit>, Integer>> collectResults(String filename, List<Path<Unit>> possiblePaths){
 		List<Pair<Path<Unit>, Integer>> result = new ArrayList<>();
 		File results = new File(filename);
-		try(BufferedReader reader = new BufferedReader(new FileReader(results))){
-			String line;
-			while((line = reader.readLine()) != null){
-				String path = line.split(PrintInfo.DIVIDER)[0];
-				int pathCount = Integer.parseInt(line.split(PrintInfo.DIVIDER)[1]);
+		System.out.println("Looking among "+possiblePaths.size()+" paths.");
+		for(Path<Unit> path : possiblePaths){
+			System.out.println(path);
+		}
+		try(ObjectInputStream reader = new ObjectInputStream(new FileInputStream(results))){
+			Pair<Path<Unit>, Integer> path;
+			while((path = (Pair<Path<Unit>, Integer>) reader.readObject()) != null){
 				boolean found = false;
 				for(Path<Unit> possiblePath : possiblePaths){
-					if(possiblePath.toString().equals(path)){
+					if(possiblePath.equals(path.first())){
 						found = true;
-						result.add(new Pair<>(possiblePath, new Integer(pathCount)));
+						result.add(path);
 						break;
 					}
 				}
@@ -141,6 +145,9 @@ public class EvaluateData {
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new Error("Error encountered while reading from results file!");
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+			throw new Error("Error loading object!");
 		}
 		return result;
 	}
@@ -212,9 +219,7 @@ public class EvaluateData {
 			
 			getHotPaths(collectResults("results/results_"+Scene.v().getMainClass().getShortName()+".txt", possiblePaths));
 			
-			for(SootClass _class : Scene.v().getClasses()){//Reset the scene
-				Scene.v().removeClass(_class);
-			}
+			Scene.v().getClasses().clear();
 		}
 	}
 	

@@ -4,10 +4,12 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.EmptyStackException;
 import java.util.HashMap;
@@ -49,6 +51,20 @@ public class DynamicProfiler {
 	 */
 	SootClass _class;
 	
+	private static BufferedReader _reader;
+	
+	private static PrintInfo _logger;
+	
+	private static ArrayList<Pair<Path<Unit>, Integer>> _pathCounts;
+	
+	private static int _fileNumber;
+	
+	private static int _count;
+	
+	private static long _startTime;
+	
+	private static int _unitDeletion;
+	
 	/**
 	 * Where to find the files
 	 */
@@ -89,256 +105,220 @@ public class DynamicProfiler {
 		}
 	}
 	
+	public String analyzeFilesHelper(String currLine){
+		Path<Unit> currPath = new Path<>();
+		Set<Path<Unit>> backEdges = new HashSet<>();
+		Path<Unit> currLoopSegment = new Path<>();
+		int repCount = 0;
+		Unit lastUnit = null;
+		
+		String line = currLine;
+		SootMethod thisMeth = Scene.v().getMethod(line.split(PrintInfo.DIVIDER)[0]);
+		SootMethod meth = thisMeth;
+		mainLoop:
+		while(line != null){
+			try {
+				String methodSignature = line.split(PrintInfo.DIVIDER)[0];
+				String unitString = line.split(PrintInfo.DIVIDER)[1];
+				meth = Scene.v().getMethod(methodSignature);
+				
+				_count++;
+				
+				if(_count % 1000000 == 0){
+					_logger.log("["+_class.getShortName()+"] Number of statements processed: "+_count+
+							", \n\tAmount of back paths: "+backEdges.size()+
+							", \n\tCurrent repCount: "+repCount+
+							", \n\tNumber of found paths: "+_pathCounts.size()+
+							", \n\tThe total length of those paths: "+pathSize(_pathCounts)+
+							", \n\tNumber of times those paths have been traversed: "+traversedPaths(_pathCounts)+
+							", \n\tThe amount of units used:"+(_count-_unitDeletion)+
+							", \n\tTime elapsed:"+(System.currentTimeMillis()-_startTime)/1000);
+				}
+				
+				if(meth.isStatic() && meth.isEntryMethod() && meth.getName().equals("<clinit>")){
+					line = _reader.readLine();
+					continue;//throw away all static initializers. They are only executed once.
+				}
+				
+				boolean found = false;
+				
+				for(Unit unit : meth.retrieveActiveBody().getUnits()){
+					if(unit.toString().equals(unitString)){
+						found = true;
+						
+						if(!meth.equals(thisMeth)){
+							if(lastUnit instanceof JReturnStmt || lastUnit instanceof JReturnVoidStmt || lastUnit instanceof JRetStmt){
+								if(!thisMeth.getDeclaringClass().equals(meth.getDeclaringClass())){
+									//Path ends, go back to last path we were making
+									addPath(currPath, repCount, backEdges);
+									return line;
+								}
+							} else if(!meth.getDeclaringClass().equals(thisMeth.getDeclaringClass())){
+								//Had to be an invoke, and it is to a different class
+								line = analyzeFilesHelper(line);
+								continue mainLoop;
+								
+							}
+						}
+						//What is the point? All we are doing is modifying the call stack for what will eventually be returned with no added benefits.
+//						} else {//we are in the same method. Check for recursion
+//							if(lastUnit instanceof JReturnStmt || lastUnit instanceof JReturnVoidStmt || lastUnit instanceof JRetStmt){
+//								callStack.pop();
+//							} else if(lastUnit instanceof JInvokeStmt || lastUnit instanceof JAssignStmt){//Only checks for recursion
+//								SootMethod method_called = getMethodCalled(lastUnit);
+//								if(method_called != null){
+//									if(Scene.v().getApplicationClasses().contains(method_called.getDeclaringClass()))
+//										callStack.push(meth);
+//								}
+//							}
+//						}
+						
+						if(!currPath.contains(unit)){
+							currPath.add(unit);
+							currLoopSegment = new Path<>();
+						} else {
+							_unitDeletion++;
+							if(currLoopSegment.contains(unit)){
+								//this is looPrintInfong on itself
+								boolean foundPath = false;
+								for(Path<Unit> loopedPath : backEdges){
+									if(loopedPath.equals(currLoopSegment)){
+										foundPath = true;
+										repCount++;
+										break;
+									}
+								}
+								if(!foundPath){
+									backEdges.add(currLoopSegment);
+								}
+								currLoopSegment = new Path<>();
+							} else {
+								currLoopSegment.add(unit);
+							}
+						}
+						
+						lastUnit = unit;
+						break;
+						
+					}
+				}
+				if(found){
+					if((line = _reader.readLine()) == null){
+						newFile();
+						line = _reader.readLine();
+						if(line == null){
+							finished(currPath, repCount, backEdges);
+							return null;
+						}
+					}
+					continue;
+				}
+				throw new Error("Unit not found at line "+_count+": "+unitString);
+		
+			} catch(IOException e){
+				e.printStackTrace();
+				throw new Error("Encountered a problem while reading the file");
+			}
+		}
+		throw new Error("Shouldn't be here");
+		
+	}
+	
+	private boolean finished = false;
+	
+	private void finished(Path<Unit> currPath, int repCount, Set<Path<Unit>> backEdges){
+		if(finished)
+			throw new Error("Already finished");
+		finished = true;
+		_logger.log("["+_class.getShortName()+"] Finished");
+		addPath(currPath, repCount, backEdges);
+	}
+	
+	private void addPath(Path<Unit> currPath, int repCount, Set<Path<Unit>> backEdges) {
+		boolean inMap = false;
+		int location;
+		for(location = 0; location < _pathCounts.size(); location++){
+			if(_pathCounts.get(location).first().equals(currPath)){
+				inMap = true;
+				break;
+			}
+		}
+		if(inMap){
+			//logger.log("["+originalName+"] Went along a previous path");
+			_pathCounts.get(location).setSecond(new Integer(_pathCounts.get(location).second()+1+repCount+backEdges.size()));
+		} else {
+			//logger.log("["+originalName+"] Found a new path");
+			_pathCounts.add(new Pair<>(currPath, new Integer(1+repCount+backEdges.size())));
+		}
+		
+	}
+
+	private void newFile() {
+		_logger.log("["+_class.getShortName()+"] Finished file "+_fileNumber);
+		_fileNumber++;
+		File toRead = new File(PrintInfo.FILE_LOCATION+_class.getShortName()+_fileNumber+".txt");
+		if(toRead.exists()){
+			try {
+				_reader = new BufferedReader(new FileReader(toRead));
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+				throw new Error("Error finding next file");
+			} catch (IOException e) {
+				e.printStackTrace();
+				throw new Error("Error reading next line");
+			}
+		}
+		
+	}
+
 	/**
 	 * Analyze the files that were generated from this profilers instrumented application class
 	 */
 	public void analyzeFiles(){
 		FILE_LOCATION=PrintInfo.FILE_LOCATION;
 		String line;
-		PrintInfo logger = new PrintInfo(_class.getShortName());
+		_logger = new PrintInfo(_class.getShortName());
 		
-		logger.log("["+_class.getShortName()+"] Started executing!");
+		_logger.log("["+_class.getShortName()+"] Started executing!");
 		
-		ArrayList<Pair<Path<Unit>, Integer>> pathCounts = new ArrayList<>();
-		Path<Unit> currPath = new Path<>();
-		Stack<List<Object>> prevPaths = new Stack<>();
-		Stack<SootMethod> callStack = new Stack<>();
-		Set<Path<Unit>> backEdges = new HashSet<>();
-		Path<Unit> currLoopSegment = new Path<>();
-		int repCount = 0;
-		Unit lastUnit = null;
-		
-		int count = 0;
-		long startTime = System.currentTimeMillis();
-		int unitDeletion = 0;
+		_pathCounts = new ArrayList<>();
+		_count = 0;
+		_startTime = System.currentTimeMillis();
+		_unitDeletion = 0;
 		
 		File toRead = new File(PrintInfo.FILE_LOCATION+_class.getShortName()+"1.txt");
-		int fileNumber = 1;
+		_fileNumber = 1;
 		
-		while(toRead.exists()){
-			try (BufferedReader reader = new BufferedReader(new FileReader(toRead))){
-				line = reader.readLine();
-				if(fileNumber == 1)
-					callStack.push(Scene.v().getMethod(line.split(PrintInfo.DIVIDER)[0]));//push the first method on (We call main)
-				while(line != null){
-					boolean found = false;
-					
-					count++;
-					if(count % 1000000 == 0){
-							logger.log("["+_class.getShortName()+"] Number of statements processed: "+count+
-									", \n\tAmount of back paths: "+backEdges.size()+
-									", \n\tCurrent repCount: "+repCount+
-									", \n\tNumber of found paths: "+pathCounts.size()+
-									", \n\tThe total length of those paths: "+pathSize(pathCounts)+
-									", \n\tNumber of times those paths have been traversed: "+traversedPaths(pathCounts)+
-									", \n\tThe amount of units used:"+(count-unitDeletion)+
-									", \n\tThe amount of paths in the stack:"+prevPaths.size()+
-									", \n\tTime elapsed:"+(System.currentTimeMillis()-startTime)/1000);
-					}
-					
-					String methodSignature = line.split(PrintInfo.DIVIDER)[0];
-					String unitString = line.split(PrintInfo.DIVIDER)[1];
-					SootMethod meth = Scene.v().getMethod(methodSignature);
-					if(meth.isStatic() && meth.isEntryMethod() && meth.getName().equals("<clinit>")){
-						line = reader.readLine();
-						continue;//throw away all static initializers. They are only executed once.
-					}
-					for(Unit unit : meth.retrieveActiveBody().getUnits()){
-						if(unit.toString().equals(unitString)){
-							found = true;
-							
-							if(!meth.equals(callStack.peek())){
-								if(lastUnit instanceof JReturnStmt || lastUnit instanceof JReturnVoidStmt || lastUnit instanceof JRetStmt){
-									SootMethod method_ended = callStack.pop();
-									if(!meth.equals(callStack.peek())){
-										throw new Error("Returning to an unknown method: "+meth+", "+callStack.peek());
-									}
-									if(!method_ended.getDeclaringClass().equals(meth.getDeclaringClass())){
-										//Path ends, go back to last path we were making
-										boolean inMap = false;
-										int location;
-										for(location = 0; location < pathCounts.size(); location++){
-											if(pathCounts.get(location).first().equals(currPath)){
-												inMap = true;
-												break;
-											}
-										}
-										if(inMap){
-											//logger.log("["+originalName+"] Went along a previous path");
-											pathCounts.get(location).setSecond(new Integer(pathCounts.get(location).second()+1+repCount+backEdges.size()));
-										} else {
-											//logger.log("["+originalName+"] Found a new path");
-											pathCounts.add(new Pair<>(currPath, new Integer(1+repCount+backEdges.size())));
-										}
-										List<Object> next = prevPaths.pop();
-										currPath = (Path<Unit>) next.get(0);
-										repCount = (int) next.get(1);
-										backEdges = (Set<Path<Unit>>) next.get(2);
-										currLoopSegment = (Path<Unit>) next.get(3);
-									}
-								} else if(!meth.getDeclaringClass().equals(callStack.peek().getDeclaringClass())){
-									//Had to be an invoke, and it is to a different class
-									List<Object> prevInfo = new ArrayList<>();
-									prevInfo.add(currPath);
-									prevInfo.add(repCount);
-									prevInfo.add(backEdges);
-									prevInfo.add(currLoopSegment);
-									prevPaths.push(prevInfo);
-									currPath = new Path<>();
-									repCount = 0;
-									backEdges = new HashSet<>();
-									currLoopSegment = new Path<>();
-									
-									/*
-									 * The static initializer is a part of the class that is going on next, so a new path is not needed.
-									 * It simply needs to push the actual method that was called onto the stack so that we correctly go back to it.
-									 * This needs to happen before the static initializer method is pushed on below.
-									 */
-//									if(meth.isStatic() && meth.isEntryMethod() && meth.getName().equals("<clinit>") && getMethodCalled(lastUnit) != null)
-//										callStack.push(getMethodCalled(lastUnit));//static initializer, which is IMPLICIT
-									callStack.push(meth);
-									
-								} else {
-									callStack.push(meth);
-								}
-							}
-							//What is the point? All we are doing is modifying the call stack for what will eventually be returned with no added benefits.
-//							} else {//we are in the same method. Check for recursion
-//								if(lastUnit instanceof JReturnStmt || lastUnit instanceof JReturnVoidStmt || lastUnit instanceof JRetStmt){
-//									callStack.pop();
-//								} else if(lastUnit instanceof JInvokeStmt || lastUnit instanceof JAssignStmt){//Only checks for recursion
-//									SootMethod method_called = getMethodCalled(lastUnit);
-//									if(method_called != null){
-//										if(Scene.v().getApplicationClasses().contains(method_called.getDeclaringClass()))
-//											callStack.push(meth);
-//									}
-//								}
-//							}
-							
-							if(!currPath.contains(unit)){
-								currPath.add(unit);
-								currLoopSegment = new Path<>();
-							} else {
-								unitDeletion++;
-								if(currLoopSegment.contains(unit)){
-									//this is looPrintInfong on itself
-									boolean foundPath = false;
-									for(Path<Unit> loopedPath : backEdges){
-										if(loopedPath.equals(currLoopSegment)){
-											foundPath = true;
-											repCount++;
-											break;
-										}
-									}
-									if(!foundPath){
-										backEdges.add(currLoopSegment);
-									}
-									currLoopSegment = new Path<>();
-								} else {
-									currLoopSegment.add(unit);
-								}
-							}
-							
-							lastUnit = unit;
-							break;
-						}
-					}
-					if(found){
-						line = reader.readLine();
-						continue;
-					}
-					throw new Error("Unit not found "+unitString+", "+meth.retrieveActiveBody().getUnits());
-				}
-				
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-				throw new Error("The data file couldn't be found! "+fileNumber);
-			} catch (IOException e) {
-				e.printStackTrace();
-				throw new Error("Error occured while reading the data!");
-			}
-			logger.log("["+_class.getShortName()+"] Finished file "+fileNumber);
-			fileNumber++;
-			toRead = new File(PrintInfo.FILE_LOCATION+_class.getShortName()+fileNumber+".txt");
+		String firstLine = null;
+		
+		try {
+			_reader = new BufferedReader(new FileReader(toRead));
+			firstLine = _reader.readLine();
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+			throw new Error("The first file couldn't be found!");
+		} catch (IOException e1) {
+			e1.printStackTrace();
+			throw new Error("The first file couldn't be read!");
 		}
 		
-		logger.log("Finished reading from the files");
-		logger.log(currPath.toString());
-		if(!currPath.equals(new Path<>())){
-			boolean inMap = false;
-			int location;
-			for(location = 0; location < pathCounts.size(); location++){
-				if(pathCounts.get(location).first().equals(currPath)){
-					inMap = true;
-					break;
-				}
-			}
-			if(inMap){
-				logger.log("["+_class.getShortName()+"] Went along a previous path");
-				pathCounts.get(location).setSecond(new Integer(pathCounts.get(location).second()+1+repCount+backEdges.size()));
-			} else {
-				logger.log("["+_class.getShortName()+"] Found a new path");
-				pathCounts.add(new Pair<>(currPath, new Integer(1+repCount+backEdges.size())));
-			}
-		}
-		logger.log(prevPaths.toString());
-		for(List<Object> paths : prevPaths){
-			currPath = (Path<Unit>) paths.get(0);
-			repCount = ((Integer) paths.get(1)).intValue();
-			backEdges = (Set<Path<Unit>>) paths.get(2);
-			currLoopSegment = (Path<Unit>) paths.get(3);
-			boolean inMap = false;
-			int location;
-			for(location = 0; location < pathCounts.size(); location++){
-				if(pathCounts.get(location).first().equals(currPath)){
-					inMap = true;
-					break;
-				}
-			}
-			if(inMap){
-				logger.log("["+_class.getShortName()+"] Went along a previous path");
-				pathCounts.get(location).setSecond(new Integer(pathCounts.get(location).second()+1+repCount+backEdges.size()));
-			} else {
-				logger.log("["+_class.getShortName()+"] Found a new path");
-				pathCounts.add(new Pair<>(currPath, new Integer(1+repCount+backEdges.size())));
-			}
-		}
+		if(analyzeFilesHelper(firstLine) != null)
+			throw new Error("Main function didn't end the file");
 		
 		File resultDir = new File(PrintInfo.FILE_LOCATION+"results/");
 		resultDir.mkdir();
 		File f = new File(PrintInfo.FILE_LOCATION+"results/results_"+_class.getShortName()+".txt");
 		
-		try(BufferedWriter bw = new BufferedWriter(new FileWriter(f, true))){
+		try(ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(f))){
 			f.createNewFile();
-			for(Pair<Path<Unit>, Integer> path : pathCounts){
-				bw.write(path.first().toString()+PrintInfo.DIVIDER);
-				bw.write(path.second()+"\n");
+			for(Pair<Path<Unit>, Integer> path : _pathCounts){
+				oos.writeObject(path);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new Error("Error occurred while writing to the results file!");
 		}
-		PrintInfo.close();
-	}
-	
-	/**
-	 * Returns the method called by the given unit, or null if no method was called
-	 * @param unit The unit to analyze
-	 * @return The method called by the unit
-	 */
-	private SootMethod getMethodCalled(Unit unit){
-		if(unit instanceof JInvokeStmt){
-			return ((JInvokeStmt) unit).getInvokeExpr().getMethod();
-		} else if(unit instanceof JAssignStmt){
-			for(ValueBox vb : unit.getUseBoxes()){
-				if(vb.getClass().getSimpleName().equals("LinkedRValueBox")){
-					if(vb.getValue() instanceof InvokeExpr){
-						return ((InvokeExpr) vb.getValue()).getMethod();
-					}
-				}
-			}
-		}
-		return null;
+		_logger.closeLog();
 	}
 	
 	/**
