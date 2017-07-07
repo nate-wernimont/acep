@@ -1,7 +1,5 @@
 package edu.iastate.cs.design.asymptotic.interfaces.impl;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,16 +13,12 @@ import java.util.Vector;
 //import com.sun.org.apache.bcel.internal.generic.FNEG;
 
 import edu.iastate.cs.design.asymptotic.datastructures.CallGraphDFS;
-import edu.iastate.cs.design.asymptotic.datastructures.EdgeWeight;
-import edu.iastate.cs.design.asymptotic.datastructures.Log;
 import edu.iastate.cs.design.asymptotic.datastructures.LoopInfo;
 import edu.iastate.cs.design.asymptotic.datastructures.Module;
 import edu.iastate.cs.design.asymptotic.datastructures.Pair;
 import edu.iastate.cs.design.asymptotic.interfaces.BlockEdgeFrequencyPass;
 import edu.iastate.cs.design.asymptotic.interfaces.BranchPredictionInfo;
 import edu.iastate.cs.design.asymptotic.interfaces.StaticProfilePass;
-import edu.iastate.cs.design.asymptotic.datastructures.Pair;
-
 import soot.SootMethod;
 import soot.Unit;
 import soot.Value;

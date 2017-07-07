@@ -27,7 +27,6 @@ import soot.jimple.internal.JDivExpr;
 import soot.jimple.internal.JEqExpr;
 import soot.jimple.internal.JGeExpr;
 import soot.jimple.internal.JGtExpr;
-import soot.jimple.internal.JIfStmt;
 import soot.jimple.internal.JInstanceFieldRef;
 import soot.jimple.internal.JLeExpr;
 import soot.jimple.internal.JLtExpr;
@@ -245,6 +244,7 @@ public class Loop {
 		return getLoopExits().size() == 1;
 	}
 
+	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
@@ -268,6 +268,7 @@ public class Loop {
 		return null;
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;

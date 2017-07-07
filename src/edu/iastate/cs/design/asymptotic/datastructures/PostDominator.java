@@ -1,7 +1,4 @@
 package edu.iastate.cs.design.asymptotic.datastructures;
-import java.util.List;
-
-import soot.Unit;
 import soot.toolkits.graph.CompleteBlockGraph;
 import soot.toolkits.graph.DirectedGraph;
 import soot.toolkits.graph.ExceptionalUnitGraph;

@@ -91,8 +91,6 @@ import soot.baf.internal.BTrap;
 import soot.baf.internal.BUshrInst;
 import soot.baf.internal.BVirtualInvokeInst;
 import soot.baf.internal.BXorInst;
-import soot.dava.toolkits.base.AST.transformations.ExtraLabelNamesRemover;
-//import sun.management.OperatingSystemImpl;
 
 /**
  * This class has to perform three level of mapping 1. Soot.baf bytecode -> Java

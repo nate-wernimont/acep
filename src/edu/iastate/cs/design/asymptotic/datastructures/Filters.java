@@ -1,6 +1,5 @@
 package edu.iastate.cs.design.asymptotic.datastructures;
 
-import edu.iastate.cs.design.asymptotic.interfaces.impl.Analysis;
 import soot.SootMethod;
 
 /**

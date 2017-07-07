@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Stack;
 import java.util.Map.Entry;
+import java.util.Stack;
 
 import soot.toolkits.graph.Block;
 import soot.toolkits.graph.BriefBlockGraph;

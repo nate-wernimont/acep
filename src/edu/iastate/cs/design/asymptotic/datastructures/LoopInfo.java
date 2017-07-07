@@ -2,7 +2,6 @@ package edu.iastate.cs.design.asymptotic.datastructures;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -14,16 +13,12 @@ import soot.Unit;
 import soot.Value;
 import soot.ValueBox;
 import soot.jimple.IdentityStmt;
-import soot.jimple.IfStmt;
 import soot.jimple.ParameterRef;
 import soot.jimple.Stmt;
 import soot.toolkits.graph.Block;
 import soot.toolkits.graph.BriefBlockGraph;
 import soot.toolkits.graph.BriefUnitGraph;
-import soot.toolkits.graph.CompleteBlockGraph;
-import soot.toolkits.graph.CompleteUnitGraph;
 import soot.toolkits.graph.DirectedGraph;
-import soot.toolkits.graph.ExceptionalUnitGraph;
 import soot.toolkits.graph.UnitGraph;
 
 public class LoopInfo {
@@ -86,7 +81,7 @@ public class LoopInfo {
 		while (unitsIter.hasNext()) {
 			Unit unit = unitsIter.next();
 			if (unit instanceof IdentityStmt) {
-				Value value = (Value) ((IdentityStmt) unit).getRightOp();
+				Value value = ((IdentityStmt) unit).getRightOp();
 				if (value instanceof ParameterRef) {
 					params.add(unit);
 				}
@@ -99,7 +94,7 @@ public class LoopInfo {
 		while (paramsIter.hasNext()) {
 			Unit unit = paramsIter.next();
 			if (unit instanceof IdentityStmt) {
-				Value val = (Value) ((IdentityStmt) unit).getLeftOp();
+				Value val = ((IdentityStmt) unit).getLeftOp();
 				if (val.equals(value))
 					return true;
 			}

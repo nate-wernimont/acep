@@ -1,12 +1,9 @@
 package edu.iastate.cs.design.asymptotic.datastructures;
 
 import java.util.Iterator;
-import java.util.List;
 
-import soot.Body;
 import soot.SootMethod;
 import soot.toolkits.graph.Block;
-import soot.toolkits.graph.CompleteBlockGraph;
 
 public class Method implements Iterable<Block>{
 

@@ -1,5 +1,4 @@
 package edu.iastate.cs.design.asymptotic.interfaces.impl;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -10,14 +9,9 @@ import edu.iastate.cs.design.asymptotic.interfaces.BranchHeuristics;
 import edu.iastate.cs.design.asymptotic.interfaces.BranchHeuristicsInfo;
 import edu.iastate.cs.design.asymptotic.interfaces.BranchPredictionInfo;
 import edu.iastate.cs.design.asymptotic.interfaces.BranchPredictionPass;
-
 import soot.Body;
-import soot.SootMethod;
-import soot.Unit;
 import soot.toolkits.graph.Block;
 import soot.toolkits.graph.BriefBlockGraph;
-import soot.toolkits.graph.CompleteBlockGraph;
-import soot.toolkits.graph.ExceptionalUnitGraph;
 
 /**
  * BranchPredictionPass - This class implement the branch predictor proposed
@@ -104,7 +98,7 @@ public class BranchPredictionPassImpl implements BranchPredictionPass {
 					Block successorBlk = succIter.next();
 					Pair<Block, Block> edge = new Pair<Block, Block> (basicBlock, successorBlk);
 					if (BPI.isBackEdge(edge)) {
-						float probabilityTaken = (float) BHI.getProbabilityTaken(
+						float probabilityTaken = BHI.getProbabilityTaken(
 								BranchHeuristics.LOOP_BRANCH_HEURISTIC) / noOfBackEdges;
 						EdgeProbabilities.put(edge, new Double(probabilityTaken));
 					} else {
@@ -112,7 +106,7 @@ public class BranchPredictionPassImpl implements BranchPredictionPass {
 						// an exit edge. However, there are situations in which this edge is
 						// an exit edge of an inner loop, but not for the outer loop. So,
 						// consider the other edges always as an exit edge.
-						float probabilityNotTaken = (float) BHI.getProbabilityNotTaken(
+						float probabilityNotTaken = BHI.getProbabilityNotTaken(
 								BranchHeuristics.LOOP_BRANCH_HEURISTIC) / (noOfSuccessors - noOfBackEdges);
 						EdgeProbabilities.put(edge, new Double(probabilityNotTaken));
 					}
@@ -124,7 +118,7 @@ public class BranchPredictionPassImpl implements BranchPredictionPass {
 				for (Iterator<Block> succIter = successors.iterator(); succIter.hasNext();) {
 					Block successorBlk = succIter.next();
 					Pair<Block, Block> edge = new Pair<Block, Block> (basicBlock, successorBlk);
-					float probability = 1.0f / (float) noOfSuccessors;
+					float probability = 1.0f / noOfSuccessors;
 					EdgeProbabilities.put(edge, new Double(probability));
 				}
 			} else {
@@ -159,6 +153,7 @@ public class BranchPredictionPassImpl implements BranchPredictionPass {
 
 	}
 	
+	@Override
 	public BranchPredictionInfo getBPI () {
 		return BPI;
 	}
@@ -167,6 +162,7 @@ public class BranchPredictionPassImpl implements BranchPredictionPass {
 	 * getEdgeProbability - Find the edge probability. If the edge is not
 	 * found, return 1.0 (probability of 100% of being taken).
 	 */
+	@Override
 	public Double getEdgeProbability (Pair<Block, Block> edge) {
 		// If edge was found, return it. Otherwise return the default value,
 		// meaning that there is no profile known for this edge. The default value
@@ -214,6 +210,7 @@ public class BranchPredictionPassImpl implements BranchPredictionPass {
 		EdgeProbabilities.put(edgeNotTaken, (float)(oldProbNotTaken * probNotTaken)/d);
 	}
 	
+	@Override
 	public HashMap<Pair<Block, Block>, Double> getEdgeProbabilities () {
 		return EdgeProbabilities;
 	}

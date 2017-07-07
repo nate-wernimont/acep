@@ -1,25 +1,13 @@
 package edu.iastate.cs.design.asymptotic.machinelearning.test;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
-import edu.iastate.cs.design.asymptotic.machinelearning.calculation.FeatureStatistic;
-import edu.iastate.cs.design.asymptotic.machinelearning.calculation.Path;
-import edu.iastate.cs.design.asymptotic.machinelearning.calculation.PathEnumerator;
 import soot.Scene;
 import soot.SootClass;
-import soot.SootField;
 import soot.SootMethod;
 import soot.Unit;
 import soot.ValueBox;
 import soot.jimple.InvokeStmt;
-import soot.jimple.internal.ImmediateBox;
 import soot.jimple.internal.JInvokeStmt;
-import soot.jimple.internal.JimpleLocalBox;
 import soot.options.Options;
-import soot.toolkits.graph.Block;
 
 public class ExtractPaths {
 

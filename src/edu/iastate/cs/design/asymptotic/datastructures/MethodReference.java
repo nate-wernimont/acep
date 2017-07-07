@@ -1,6 +1,5 @@
 package edu.iastate.cs.design.asymptotic.datastructures;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class MethodReference extends MemberReference {

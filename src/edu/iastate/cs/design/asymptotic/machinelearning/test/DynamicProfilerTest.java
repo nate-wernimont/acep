@@ -1,13 +1,10 @@
 package edu.iastate.cs.design.asymptotic.machinelearning.test;
 
-import java.io.File;
 import java.io.IOException;
 
 import edu.iastate.cs.design.asymptotic.machinelearning.calculation.DynamicProfiler;
 import soot.Scene;
 import soot.SootClass;
-import soot.SootField;
-import soot.SootMethod;
 import soot.options.Options;
 
 public class DynamicProfilerTest {

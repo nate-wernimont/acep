@@ -3,6 +3,8 @@ package edu.iastate.cs.design.asymptotic.machinelearning.calculation;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.nustaq.serialization.FSTConfiguration;
+
 import soot.Body;
 import soot.BodyTransformer;
 import soot.Scene;
@@ -13,7 +15,6 @@ import soot.jimple.InvokeExpr;
 import soot.jimple.Jimple;
 import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
-import soot.jimple.internal.JAssignStmt;
 import soot.jimple.internal.JGotoStmt;
 import soot.jimple.internal.JIdentityStmt;
 import soot.jimple.internal.JIfStmt;
@@ -40,6 +41,7 @@ public class Instrumenter extends BodyTransformer {
 		close = Scene.v().getMethod("<edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo: void close()>");
 	}
 	
+	@Override
 	protected void internalTransform(Body body, String phase, Map options) {
 		Chain<Unit> units = body.getUnits();
 		Iterator<Unit> unitIter = units.snapshotIterator();

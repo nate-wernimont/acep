@@ -2,7 +2,6 @@ package edu.iastate.cs.design.asymptotic.interfaces;
 import edu.iastate.cs.design.asymptotic.datastructures.LoopInfo;
 import edu.iastate.cs.design.asymptotic.datastructures.Pair;
 import soot.SootMethod;
-import soot.Unit;
 import soot.toolkits.graph.Block;
 
 /*

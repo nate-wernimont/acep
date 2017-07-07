@@ -134,9 +134,9 @@ public class FeatureStatistic {
 	 */
 	public Number getValue(Feature feature){
 		if(feature instanceof Count)
-			return counts[feature.identifier];
+			return counts[Feature.identifier];
 		else
-			return coverages[feature.identifier];
+			return coverages[Feature.identifier];
 	}
 	
 	/**
@@ -151,6 +151,7 @@ public class FeatureStatistic {
 	/**
 	 * Converts this object to a string format
 	 */
+	@Override
 	public String toString(){
 		String result = "====Counts====\n";
 		for(Count feature : Count.values()){

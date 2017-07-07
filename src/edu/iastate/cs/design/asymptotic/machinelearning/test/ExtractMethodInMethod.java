@@ -11,15 +11,16 @@ import soot.SootClass;
 import soot.SootMethod;
 import soot.Unit;
 import soot.options.Options;
-import soot.toolkits.graph.Block;
 
 public class ExtractMethodInMethod {
 
 	public static void main(String[] args) {
-		String _classpath = "/Library/Java/JavaVirtualMachines/1.6.0_37-b06-434.jdk/Contents/Home/lib/rt.jar:/Library/Java/JavaVirtualMachines/1.6.0_37-b06-434.jdk/Contents/Home/lib/jce.jar:/Users/natemw/Documents/acep/bin";
+		String _classpath = "/usr/java/jdk1.8.0_131/jre/lib/rt.jar:/usr/java/jdk1.8.0_131/jre/lib/jce.jar:/users/nate/Documents/acep/bin";
 
 		Options.v().set_keep_line_number(true);
-		Options.v().set_soot_classpath(_classpath);
+		Options.v().set_whole_program(true);
+		Options.v().set_no_bodies_for_excluded(true);
+		Options.v().set_allow_phantom_refs(true);
 		System.out.println(Options.v().soot_classpath());
 		Scene.v().loadNecessaryClasses();
 		Options.v().set_whole_program(true);
@@ -28,10 +29,8 @@ public class ExtractMethodInMethod {
 		
 		
 		PathEnumerator pathE = new PathEnumerator(sClass);
-		pathE.findIntraMethodPaths();
-		pathE.blockToUnits();
 		Unit u;
-		pathE.findIntraClassPaths();
+		pathE.run();
 		HashMap<SootMethod, List<Path<Unit>>> map = pathE.getUnitMap();
 		Set<SootMethod> keys = map.keySet();
 		for(SootMethod meth : keys ){

@@ -3,16 +3,13 @@ package edu.iastate.cs.design.asymptotic.datastructures;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import edu.iastate.cs.design.asymptotic.interfaces.BranchPredictionInfo;
 import edu.iastate.cs.design.asymptotic.interfaces.impl.BranchPredictionInfoImpl;
-
 import soot.Body;
 import soot.SootMethod;
 import soot.toolkits.graph.Block;
 import soot.toolkits.graph.BriefBlockGraph;
-import soot.toolkits.graph.CompleteBlockGraph;
 import soot.toolkits.graph.DirectedGraph;
 
 public class CopyOfPathGenerator {

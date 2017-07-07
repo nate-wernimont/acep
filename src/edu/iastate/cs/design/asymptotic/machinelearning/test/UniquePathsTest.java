@@ -1,11 +1,17 @@
 package edu.iastate.cs.design.asymptotic.machinelearning.test;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.NotSerializableException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
@@ -13,24 +19,32 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.nustaq.serialization.FSTConfiguration;
+import org.nustaq.serialization.FSTObjectInput;
+import org.nustaq.serialization.FSTObjectOutput;
+import org.objenesis.strategy.StdInstantiatorStrategy;
+
 import edu.iastate.cs.design.asymptotic.machinelearning.calculation.Path;
 import edu.iastate.cs.design.asymptotic.machinelearning.calculation.PathEnumerator;
-import edu.iastate.cs.design.asymptotic.tests.benchmarks.Benchmark;
+import edu.iastate.cs.design.asymptotic.machinelearning.calculation.PrintInfo;
 import edu.iastate.cs.design.asymptotic.tests.benchmarks.Test;
 import soot.Scene;
 import soot.SootClass;
 import soot.Unit;
+import soot.jimple.internal.JIdentityStmt;
 
 public class UniquePathsTest {
+	
+	static FSTConfiguration conf = FSTConfiguration.createJsonConfiguration(false, false).setForceSerializable(true);
 
-	public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException{
+	public static void main(String[] args) throws Exception{
 		if(args.length < 1){
 			System.out.println("No benchmark supplied");
 			return;
 		}
 		String b = args[0];
 		String config = b + File.separator + "config.xml";
-		Benchmark benchmark = new Test(config);
+		new Test(config);
 		for(SootClass _class : Scene.v().getApplicationClasses()){
 			if(_class.isLibraryClass() || _class.isJavaLibraryClass() || !_class.isConcrete()){
 				continue;
@@ -42,36 +56,37 @@ public class UniquePathsTest {
 			System.out.println("Total Paths: "+paths.size());
 			Set<Path<Unit>> uniqPaths = new HashSet<>(paths);
 			System.out.println("Unique Paths: "+uniqPaths.size());
-			uniqPaths.forEach((v)->System.out.println(v.toString()));
-			
-			
+			//uniqPaths.forEach((v)->System.out.println(v.toString()));
+			//kryo.setDefaultSerializer(BeanSerializer.class);
 			File f = new File("serializationTest.txt");
+			f.delete();
 			f.createNewFile();
-			try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(f))){
-				for(Path<Unit> path : paths){
-					Unit debug = null;
-					try {
-						for(Unit unit : path.getElements()){
-							debug = unit;
-							oos.writeObject(unit);
-						}
-					} catch(NotSerializableException e){
-						System.out.println(debug);
-						System.out.println(debug.getUseBoxes().get(0).getValue());
-						throw new Error();
-					}
-				}
+			byte[] barray = conf.asByteArray(paths);
+			try(FileOutputStream out = new FileOutputStream(f)){
+				out.write(barray);
 			}
-			List<Path<Unit>> deserializedPaths = new ArrayList<>();
-			
-			try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(f))){
-				Path<Unit> path = null;
-				while((path = (Path<Unit>) ois.readObject()) != null){
-					deserializedPaths.add(path);
-				}
+//			try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(f))){
+//				for(Path<Unit> path : paths){
+//					out.writeObject(conf.asByteArray(path));
+//				}
+//			}
+			//kryo.setInstantiatorStrategy(new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
+			System.out.println("Done writing");
+			List<Path<Unit>> deserializedPaths = null;
+			try(FileInputStream in = new FileInputStream(f)){
+				byte[] result = new byte[(int) f.length()];
+				in.read(result);
+				deserializedPaths = (List<Path<Unit>>) conf.asObject(result);
 			}
-			
-			System.out.println("Unique Strings: "+deserializedPaths.size());
+			//deserializedPaths.forEach((v)->System.out.println(v.toString()));
+//			try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(f))){
+//				Path<Unit> path = null;
+//				while((path = conf.asObject(in.read)) != null){
+//					deserializedPaths.add(path);
+//				}
+//			}
+			Set<Path<Unit>> uniqPathsSerialized = new HashSet<>(deserializedPaths);
+			System.out.println("Unique Strings: "+uniqPathsSerialized.size());
 			
 		}
 		

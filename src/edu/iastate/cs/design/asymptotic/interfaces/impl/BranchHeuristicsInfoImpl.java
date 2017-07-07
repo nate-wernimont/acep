@@ -11,16 +11,11 @@ import edu.iastate.cs.design.asymptotic.interfaces.BranchHeuristics;
 import edu.iastate.cs.design.asymptotic.interfaces.BranchHeuristicsInfo;
 import edu.iastate.cs.design.asymptotic.interfaces.BranchPredictionInfo;
 import edu.iastate.cs.design.asymptotic.interfaces.BranchProbabilities;
-
 import soot.IntType;
 import soot.Unit;
 import soot.Value;
-import soot.ValueBox;
 import soot.jimple.IntConstant;
-import soot.jimple.NullConstant;
-import soot.jimple.Stmt;
 import soot.jimple.internal.AbstractBinopExpr;
-import soot.jimple.internal.JCmpExpr;
 import soot.jimple.internal.JEqExpr;
 import soot.jimple.internal.JGeExpr;
 import soot.jimple.internal.JGtExpr;
@@ -32,7 +27,6 @@ import soot.jimple.internal.JReturnStmt;
 import soot.jimple.internal.JReturnVoidStmt;
 import soot.jimple.internal.JimpleLocal;
 import soot.toolkits.graph.Block;
-import soot.toolkits.graph.MHGPostDominatorsFinder;
 
 /**
  * This class is responsible to predict which successors of a basic block will
@@ -99,10 +93,12 @@ public class BranchHeuristicsInfoImpl implements BranchHeuristicsInfo {
 		}
 	}
 
+	@Override
 	public float getProbabilityTaken(int heuristic) {
 		return probList[heuristic].probabilityTaken;
 	}
 
+	@Override
 	public float getProbabilityNotTaken(int heuristic) {
 		return probList[heuristic].probabilityNotTaken;
 	}
@@ -114,6 +110,7 @@ public class BranchHeuristicsInfoImpl implements BranchHeuristicsInfo {
 	 * @returns a Prediction that is a pair in which the first element is the
 	 *          successor taken, and the second the successor not taken.
 	 */
+	@Override
 	public Pair<Block, Block> MatchHeuristic(int bh, Block root) {
 		// Try to match the heuristic bh with their respective handler.
 		switch (bh) {
@@ -149,6 +146,7 @@ public class BranchHeuristicsInfoImpl implements BranchHeuristicsInfo {
 	 * @returns a Prediction that is a pair in which the first element is the
 	 *          successor taken, and the second the successor not taken.
 	 */
+	@Override
 	public Pair<Block, Block> MatchLoopBranchHeuristic(Block rootBasicBlock) {
 		boolean matched = false;
 		Pair<Block, Block> prediction = null;
@@ -202,6 +200,7 @@ public class BranchHeuristicsInfoImpl implements BranchHeuristicsInfo {
 	 * @returns a Prediction that is a pair in which the first element is the
 	 *          successor taken, and the second the successor not taken.
 	 */
+	@Override
 	public Pair<Block, Block> MatchPointerHeuristic(Block rootBasicBlock) {
 
 		Pair<Block, Block> prediction = null;

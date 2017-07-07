@@ -4,8 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 
 import edu.iastate.cs.design.asymptotic.machinelearning.calculation.EvaluateData;
-import edu.iastate.cs.design.asymptotic.tests.benchmarks.Benchmark;
-import edu.iastate.cs.design.asymptotic.tests.benchmarks.Test;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.Classifier;
 

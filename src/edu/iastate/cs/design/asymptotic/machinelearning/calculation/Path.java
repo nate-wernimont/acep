@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.NoSuchElementException;
 import java.util.Stack;
 
 import soot.jimple.toolkits.pointer.nativemethods.NativeMethodNotSupportedException;
@@ -22,7 +23,12 @@ public class Path<E> implements List<E>, Serializable {
 		private Node prev;
 		
 		private Node(E body){
+			this();
 			this.body = body;
+		}
+		
+		private Node() {
+			body = null;
 			prev = null;
 			next = null;
 		}
@@ -178,10 +184,30 @@ public class Path<E> implements List<E>, Serializable {
 		}
 		return false;
 	}
+	
+	private class PathIterator implements Iterator {
+		
+		Node curr = root;
+
+		@Override
+		public boolean hasNext() {
+			return !curr.next.equals(tail);
+		}
+
+		@Override
+		public Object next() {
+			if(this.hasNext()){
+				curr = curr.next;
+				return curr;
+			}
+			throw new NoSuchElementException();
+		}
+		
+	}
 
 	@Override
 	public Iterator iterator() {
-		throw new NativeMethodNotSupportedException();
+		return new PathIterator();
 	}
 
 	@Override

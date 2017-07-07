@@ -1,6 +1,7 @@
 package edu.iastate.cs.design.asymptotic.machinelearning.test;
 
 import java.io.File;
+
 import edu.iastate.cs.design.asymptotic.machinelearning.calculation.DynamicProfiler;
 import edu.iastate.cs.design.asymptotic.tests.benchmarks.Benchmark;
 import edu.iastate.cs.design.asymptotic.tests.benchmarks.Test;
@@ -16,10 +17,10 @@ public class DynamicProfilerBenchmarkTest {
 		}
 		String b = args[0];
 		String config = b + File.separator + "config.xml";
-		Benchmark benchmark = new Test(config);
+		new Test(config);
 		
 		DynamicProfiler dp = new DynamicProfiler(Scene.v().getMainClass());
-		//dp.addTransformer(Options.v().output_format_class);
-		dp.analyzeFiles();
+		dp.addTransformer(Options.v().output_format_class);
+		//dp.analyzeFiles();
 	}
 }

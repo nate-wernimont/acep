@@ -1,6 +1,5 @@
 package edu.iastate.cs.design.asymptotic.interfaces.impl;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,24 +12,16 @@ import edu.iastate.cs.design.asymptotic.datastructures.Loop;
 import edu.iastate.cs.design.asymptotic.datastructures.LoopInfo;
 import edu.iastate.cs.design.asymptotic.datastructures.Pair;
 import edu.iastate.cs.design.asymptotic.interfaces.BranchPredictionInfo;
-
 import soot.Body;
-import soot.NormalUnitPrinter;
 import soot.SootMethod;
 import soot.Unit;
-import soot.UnitPrinter;
 import soot.Value;
 import soot.ValueBox;
-import soot.JastAddJ.AssignExpr;
-import soot.baf.StoreInst;
 import soot.jimple.AssignStmt;
 import soot.jimple.InvokeExpr;
-import soot.jimple.Stmt;
 import soot.jimple.internal.JimpleLocal;
 import soot.toolkits.graph.Block;
 import soot.toolkits.graph.BriefBlockGraph;
-import soot.toolkits.graph.CompleteBlockGraph;
-import soot.toolkits.graph.ExceptionalUnitGraph;
 
 /**
  * Implementation of the auxiliary class for branch predictor routines. It
@@ -62,6 +53,7 @@ public class BranchPredictionInfoImpl implements BranchPredictionInfo {
 	 * FindBackAndExitEdges - Search for back and exit edges for all blocks
 	 * within the function loops, calculated using loop information.
 	 */
+	@Override
 	public void FindBackAndExitEdges(SootMethod method) {
 		Collection<Loop> loopsVisited = new HashSet<Loop>();
 		Collection<Unit> blocksVisited = new HashSet<Unit>();
@@ -169,6 +161,7 @@ public class BranchPredictionInfoImpl implements BranchPredictionInfo {
 	 * FindCallsAndStores - Search for call and store instruction on basic
 	 * blocks.
 	 */
+	@Override
 	public void FindCallsAndStores(SootMethod method) {
 
 		Body b = LI.methodBody();
@@ -229,6 +222,7 @@ public class BranchPredictionInfoImpl implements BranchPredictionInfo {
 	/**
 	 * BuildInfo will be invoked by the constructor
 	 */
+	@Override
 	public void BuildInfo(SootMethod method) {
 		Clear();
 		//System.out.println("BuildInfo");
@@ -241,6 +235,7 @@ public class BranchPredictionInfoImpl implements BranchPredictionInfo {
 	/**
 	 * Clear all the stored maps
 	 */
+	@Override
 	public void Clear() {
 		listBackEdges.clear();
 		listExitEdges.clear();
@@ -249,6 +244,7 @@ public class BranchPredictionInfoImpl implements BranchPredictionInfo {
 		backEdgesCount.clear();
 	}
 
+	@Override
 	public int CountBackEdges(Block block) {
 		int count = 0;
 		for (Iterator<Pair<Block, Block>> edgeIter = listBackEdges.iterator(); edgeIter
@@ -260,6 +256,7 @@ public class BranchPredictionInfoImpl implements BranchPredictionInfo {
 		return count;// backEdgesCount.get(block);
 	}
 
+	@Override
 	public Boolean CallsExit(Block basicBlock) {
 		return false;
 	}
@@ -275,6 +272,7 @@ public class BranchPredictionInfoImpl implements BranchPredictionInfo {
 //		return false;
 //	}
 
+	@Override
 	public final Boolean isBackEdge(Pair<Block, Block> edge) {
 		for (Iterator<Pair<Block, Block>> edgeIter = listBackEdges.iterator(); edgeIter
 				.hasNext();) {
@@ -285,6 +283,7 @@ public class BranchPredictionInfoImpl implements BranchPredictionInfo {
 		return false;
 	}
 
+	@Override
 	public Boolean isExitEdge(Pair<Block, Block> edge) {
 		for (Iterator<Pair<Block, Block>> edgeIter = listExitEdges.iterator(); edgeIter
 				.hasNext();) {
@@ -295,6 +294,7 @@ public class BranchPredictionInfoImpl implements BranchPredictionInfo {
 		return false;
 	}
 
+	@Override
 	public Boolean hasCall(Block basicBlock) {
 		// if (listCalls.contains(basicBlock))
 		// return true;
@@ -309,6 +309,7 @@ public class BranchPredictionInfoImpl implements BranchPredictionInfo {
 		return false;
 	}
 
+	@Override
 	public Boolean hasStore(Block basicBlock) {
 		for (Iterator<Block> blockIter = listStores.iterator(); blockIter
 				.hasNext();) {
@@ -320,10 +321,12 @@ public class BranchPredictionInfoImpl implements BranchPredictionInfo {
 		return false;
 	}
 
+	@Override
 	public LoopInfo getLoopInformation() {
 		return LI;
 	}
 
+	@Override
 	public int backEdgeCount() {
 		return listBackEdges.size();
 	}

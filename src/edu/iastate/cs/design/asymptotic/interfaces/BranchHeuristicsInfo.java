@@ -1,6 +1,5 @@
 package edu.iastate.cs.design.asymptotic.interfaces;
 import edu.iastate.cs.design.asymptotic.datastructures.Pair;
-import soot.Unit;
 import soot.toolkits.graph.Block;
 
 /**

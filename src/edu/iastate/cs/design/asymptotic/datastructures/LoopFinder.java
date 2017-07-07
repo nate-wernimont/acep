@@ -12,13 +12,11 @@ import java.util.Stack;
 import soot.Body;
 import soot.Unit;
 import soot.jimple.Stmt;
+import soot.toolkits.graph.Block;
 import soot.toolkits.graph.BlockGraph;
-import soot.toolkits.graph.ExceptionalUnitGraph;
 import soot.toolkits.graph.HashReversibleGraph;
 import soot.toolkits.graph.MHGDominatorsFinder;
-import soot.toolkits.graph.MutableDirectedGraph;
 import soot.toolkits.graph.UnitGraph;
-import soot.toolkits.graph.Block;
 
 public class LoopFinder {
 
@@ -60,7 +58,7 @@ public class LoopFinder {
 			nodeIter = heads.iterator();
 			nodeIter.next();
 			while (nodeIter.hasNext()) {
-				node = (Block)nodeIter.next();
+				node = nodeIter.next();
 				if ((cleanGraph.getPredsOf(node).size() == 0) && (cleanGraph.getSuccsOf(node).size() > 0))
 					entries.add((Block)node);
 			}
@@ -117,7 +115,7 @@ public class LoopFinder {
 			nodeIter = heads.iterator();
 			nodeIter.next();
 			while (nodeIter.hasNext()) {
-				node = (Block)nodeIter.next();
+				node = nodeIter.next();
 				if ((mdg.getPredsOf(node).size() == 0) && (mdg.getSuccsOf(node).size() > 0))
 					entries.add((Block)node);
 			}
@@ -157,13 +155,13 @@ public class LoopFinder {
 
 			List<Block> succs = mdg.getSuccsOf(s);
 			//List<Unit> preds = mdg.getPredsOf(s);
-			Collection<Block> dominaters = (Collection<Block>) a.getDominators(s);
+			Collection<Block> dominaters = a.getDominators(s);
 
 			ArrayList<Block> headers = new ArrayList<Block>();
 
 			Iterator<Block> succsIt = succs.iterator();
 			while (succsIt.hasNext()) {
-				Block succ = (Block) succsIt.next();
+				Block succ = succsIt.next();
 				if (dominaters.contains(succ)) {
 					// header succeeds and dominates s, we have a loop
 					headers.add(succ);
@@ -220,7 +218,7 @@ public class LoopFinder {
 			nodeIter = heads.iterator();
 			nodeIter.next();
 			while (nodeIter.hasNext()) {
-				node = (Unit)nodeIter.next();
+				node = nodeIter.next();
 				if ((mdg.getPredsOf(node).size() == 0) && (mdg.getSuccsOf(node).size() > 0))
 					entries.add((Unit)node);
 			}
@@ -260,7 +258,7 @@ public class LoopFinder {
 
 			List<Unit> succs = mdg.getSuccsOf(s);
 			//List<Unit> preds = mdg.getPredsOf(s);
-			Collection<Unit> dominaters = (Collection<Unit>) a.getDominators(s);
+			Collection<Unit> dominaters = a.getDominators(s);
 
 			ArrayList<Stmt> headers = new ArrayList<Stmt>();
 
@@ -337,7 +335,7 @@ public class LoopFinder {
 		stack.push(node);
 
 		while (!stack.isEmpty()) {
-			Block next = (Block) stack.pop();
+			Block next = stack.pop();
 			if (!loopBody.contains(next)) {
 				// add next to loop body
 				loopBody.add(0, next);

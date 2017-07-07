@@ -1,26 +1,18 @@
 package edu.iastate.cs.design.asymptotic.machinelearning.calculation;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.LineNumberReader;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.EmptyStackException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
-import java.util.TreeMap;
 
-import javax.management.timer.Timer;
+import org.nustaq.serialization.FSTConfiguration;
 
 import edu.iastate.cs.design.asymptotic.datastructures.Pair;
 import soot.PackManager;
@@ -29,10 +21,6 @@ import soot.SootClass;
 import soot.SootMethod;
 import soot.Transform;
 import soot.Unit;
-import soot.ValueBox;
-import soot.jimple.InvokeExpr;
-import soot.jimple.internal.JAssignStmt;
-import soot.jimple.internal.JInvokeStmt;
 import soot.jimple.internal.JRetStmt;
 import soot.jimple.internal.JReturnStmt;
 import soot.jimple.internal.JReturnVoidStmt;
@@ -51,24 +39,26 @@ public class DynamicProfiler {
 	 */
 	SootClass _class;
 	
-	private static BufferedReader _reader;
+	private BufferedReader _reader;
 	
-	private static PrintInfo _logger;
+	private PrintInfo _logger;
 	
-	private static ArrayList<Pair<Path<Unit>, Integer>> _pathCounts;
+	private ArrayList<Pair<Path<Unit>, Integer>> _pathCounts;
 	
-	private static int _fileNumber;
+	private int _fileNumber;
 	
-	private static int _count;
+	private int _count;
 	
-	private static long _startTime;
+	private long _startTime;
 	
-	private static int _unitDeletion;
+	private int _unitDeletion;
 	
 	/**
 	 * Where to find the files
 	 */
-	private static String FILE_LOCATION = "";
+	private String FILE_LOCATION = "";
+	
+	private FSTConfiguration conf = FSTConfiguration.getDefaultConfiguration().setForceSerializable(true);
 	
 	/**
 	 * Initializes an instance of the profiler
@@ -213,7 +203,7 @@ public class DynamicProfiler {
 					}
 					continue;
 				}
-				throw new Error("Unit not found at line "+_count+": "+unitString);
+				throw new Error("Unit not found at line "+_count+": "+unitString+":"+meth.retrieveActiveBody().getUnits());
 		
 			} catch(IOException e){
 				e.printStackTrace();
@@ -309,11 +299,9 @@ public class DynamicProfiler {
 		resultDir.mkdir();
 		File f = new File(PrintInfo.FILE_LOCATION+"results/results_"+_class.getShortName()+".txt");
 		
-		try(ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(f))){
+		try(FileOutputStream fos = new FileOutputStream(f)){
 			f.createNewFile();
-			for(Pair<Path<Unit>, Integer> path : _pathCounts){
-				oos.writeObject(path);
-			}
+			fos.write(conf.asByteArray(_pathCounts));
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new Error("Error occurred while writing to the results file!");

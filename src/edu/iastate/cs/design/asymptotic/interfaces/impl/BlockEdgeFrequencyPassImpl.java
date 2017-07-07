@@ -1,25 +1,22 @@
 package edu.iastate.cs.design.asymptotic.interfaces.impl;
-import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
 import java.util.Vector;
-import java.util.Map.Entry;
 
 //import com.sun.swing.internal.plaf.basic.resources.basic;
 
 import edu.iastate.cs.design.asymptotic.datastructures.Loop;
 import edu.iastate.cs.design.asymptotic.datastructures.LoopInfo;
 import edu.iastate.cs.design.asymptotic.datastructures.Pair;
-import edu.iastate.cs.design.asymptotic.datastructures.Path;
 import edu.iastate.cs.design.asymptotic.interfaces.BlockEdgeFrequencyPass;
 import edu.iastate.cs.design.asymptotic.interfaces.BranchPredictionInfo;
 import edu.iastate.cs.design.asymptotic.interfaces.BranchPredictionPass;
-
 import soot.SootMethod;
 import soot.Unit;
 import soot.toolkits.graph.Block;
@@ -92,14 +89,17 @@ implements BlockEdgeFrequencyPass {
 			System.out.println ("Integrity Problem....");
 	}
 	
+	@Override
 	public HashMap<Pair<Block, Block>, Double> getEdgeProbabilities () {
 		return BPP.getEdgeProbabilities();
 	}
 	
+	@Override
 	public LoopInfo getLoopInfo () {
 		return LI;
 	}
 	
+	@Override
 	public BranchPredictionPass getBPP () {
 		return BPP;
 	}
@@ -143,6 +143,7 @@ implements BlockEdgeFrequencyPass {
 
 	// Methods
 
+	@Override
 	public boolean runOnFunction () {
 		clear ();
 
@@ -182,15 +183,18 @@ implements BlockEdgeFrequencyPass {
 		blockFrequencies.clear();
 	}
 
+	@Override
 	public double getEdgeFrequency (Block src, Block dst) {
 		return getEdgeFrequency(new Pair<Block, Block> (src, dst));
 	}
 
+	@Override
 	public double getEdgeFrequency (Pair<Block, Block> edge) {
 		return edgeFrequencies.containsKey(edge)?
 				edgeFrequencies.get(edge):0.0;
 	}
 
+	@Override
 	public double getBlockFrequency (Block basicBlock) {
 		return blockFrequencies.containsKey(basicBlock)?
 				blockFrequencies.get(basicBlock):0.0;
@@ -200,14 +204,17 @@ implements BlockEdgeFrequencyPass {
 		return blockFrequencies;
 	}
 	
+	@Override
 	public Iterator<Block> getBlockFreqIter () {
 		return blockFrequencies.keySet().iterator();
 	}
 	
+	@Override
 	public Iterator<Pair<Block, Block>> getEdgeFreqIter () {
 		return edgeFrequencies.keySet().iterator();
 	}
 
+	@Override
 	public double getBackEdgeProbabilities (Pair<Block, Block> edge) {
 		return backEdgesProbabilities.containsKey(edge)?
 				backEdgesProbabilities.get(edge):BPP.getEdgeProbability(edge);

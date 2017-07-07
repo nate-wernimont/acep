@@ -6,3 +6,4 @@
 *.jimple
 /profilingOutput/*
 sootOutput/*.class
+/target/

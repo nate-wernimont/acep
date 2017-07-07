@@ -1,7 +1,5 @@
 package edu.iastate.cs.design.asymptotic.interfaces.impl;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -10,29 +8,20 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.NavigableSet;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
-import java.util.TreeMap;
-import java.util.Map.Entry;
-
-import javax.swing.JSeparator;
 
 import edu.iastate.cs.design.asymptotic.datastructures.CallGraphDFS;
 import edu.iastate.cs.design.asymptotic.datastructures.ExecutionPath;
 import edu.iastate.cs.design.asymptotic.datastructures.Interpreter;
 import edu.iastate.cs.design.asymptotic.datastructures.Log;
-import edu.iastate.cs.design.asymptotic.datastructures.Loop;
 import edu.iastate.cs.design.asymptotic.datastructures.LoopInfo;
 import edu.iastate.cs.design.asymptotic.datastructures.Method;
 import edu.iastate.cs.design.asymptotic.datastructures.Pair;
 import edu.iastate.cs.design.asymptotic.datastructures.Path;
 import edu.iastate.cs.design.asymptotic.datastructures.PathGenerator;
 import edu.iastate.cs.design.asymptotic.datastructures.UnitInfo;
-import edu.iastate.cs.design.asymptotic.interfaces.StaticProfilePass;
-import edu.iastate.cs.design.asymptotic.tests.SideEffectAnalysisTest;
-import edu.iastate.cs.design.asymptotic.tests.SideEffectAnalysisTest.UniqueRWSets;
-
 import soot.FastHierarchy;
 import soot.Scene;
 import soot.SootClass;
@@ -40,34 +29,17 @@ import soot.SootMethod;
 import soot.SootMethodRef;
 import soot.Unit;
 import soot.baf.BafBody;
-import soot.baf.internal.AbstractInst;
 import soot.baf.internal.BInterfaceInvokeInst;
 import soot.baf.internal.BSpecialInvokeInst;
 import soot.baf.internal.BStaticInvokeInst;
 import soot.baf.internal.BVirtualInvokeInst;
-import soot.jimple.InvokeExpr;
 import soot.jimple.JimpleBody;
-import soot.jimple.Stmt;
-import soot.jimple.internal.JInterfaceInvokeExpr;
-import soot.jimple.internal.JInvokeStmt;
-import soot.jimple.internal.JSpecialInvokeExpr;
-import soot.jimple.internal.JStaticInvokeExpr;
-import soot.jimple.internal.JVirtualInvokeExpr;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
-import soot.jimple.toolkits.pointer.DumbPointerAnalysis;
 import soot.jimple.toolkits.pointer.RWSet;
-import soot.jimple.toolkits.pointer.SideEffectAnalysis;
 import soot.toolkits.graph.Block;
 import soot.toolkits.graph.BriefBlockGraph;
-import soot.toolkits.graph.BriefUnitGraph;
-import soot.toolkits.graph.CompleteBlockGraph;
-import soot.toolkits.graph.ExceptionalUnitGraph;
-import soot.toolkits.graph.pdg.Region;
-import soot.toolkits.graph.pdg.RegionAnalysis;
 import soot.util.Chain;
-import soot.util.cfgcmd.CFGToDotGraph;
-import soot.util.dot.DotGraph;
 
 public class Analysis {
 
@@ -1162,7 +1134,8 @@ class ValueComparator implements Comparator<Path> {
         this.base = base;
     }
 
-    public int compare(Path a, Path b) {
+    @Override
+	public int compare(Path a, Path b) {
         return base.get(a).compareTo(base.get(b));
     }
 }

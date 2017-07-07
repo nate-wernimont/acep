@@ -2,7 +2,6 @@ package edu.iastate.cs.design.asymptotic.interfaces;
 import java.util.HashMap;
 
 import edu.iastate.cs.design.asymptotic.datastructures.Pair;
-import soot.Unit;
 import soot.toolkits.graph.Block;
 
 /**

@@ -1,52 +1,15 @@
 package edu.iastate.cs.design.asymptotic.machinelearning.test;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 import soot.Body;
 import soot.Scene;
 import soot.SootClass;
 import soot.SootMethod;
-import soot.Unit;
 import soot.options.Options;
 import soot.toolkits.graph.Block;
 import soot.toolkits.graph.BlockGraph;
 import soot.toolkits.graph.BriefBlockGraph;
-import soot.toolkits.graph.BriefUnitGraph;
-import soot.toolkits.graph.UnitGraph;
-import edu.iastate.cs.design.asymptotic.datastructures.LoopInfo;
-import soot.Scene;
-import soot.SootClass;
-import soot.SootMethod;
-import soot.SootMethodRef;
-import soot.Unit;
-import soot.Value;
-import soot.ValueBox;
-import soot.baf.BafBody;
-import soot.baf.internal.BInterfaceInvokeInst;
-import soot.baf.internal.BSpecialInvokeInst;
-import soot.baf.internal.BStaticInvokeInst;
-import soot.baf.internal.BVirtualInvokeInst;
-import soot.jimple.JimpleBody;
-import soot.jimple.internal.JInterfaceInvokeExpr;
-import soot.jimple.internal.JInvokeStmt;
-import soot.jimple.internal.JSpecialInvokeExpr;
-import soot.jimple.internal.JStaticInvokeExpr;
-import soot.jimple.internal.JVirtualInvokeExpr;
-import soot.options.Options;
-import soot.tagkit.LineNumberTag;
-import soot.tagkit.Tag;
-import soot.toolkits.graph.Block;
-import soot.toolkits.graph.BlockGraph;
-import soot.toolkits.graph.BriefBlockGraph;
-import soot.toolkits.graph.BriefUnitGraph;
-import soot.toolkits.graph.CompleteBlockGraph;
-import soot.toolkits.graph.ExceptionalUnitGraph;
-import soot.toolkits.graph.UnitGraph;
-import soot.toolkits.scalar.SimpleLocalDefs;
-import soot.toolkits.scalar.SimpleLocalUses;
-import soot.toolkits.scalar.UnitValueBoxPair;
 
 public class BlockTesting {
 

@@ -5,44 +5,28 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import edu.iastate.cs.design.asymptotic.datastructures.Pair;
 import edu.iastate.cs.design.asymptotic.machinelearning.calculation.FeatureStatistic.Count;
 import edu.iastate.cs.design.asymptotic.machinelearning.calculation.FeatureStatistic.Coverage;
-import edu.iastate.cs.design.asymptotic.tests.benchmarks.Benchmark;
-import edu.iastate.cs.design.asymptotic.tests.benchmarks.Test;
 import soot.Body;
-import soot.Scene;
 import soot.SootClass;
 import soot.SootField;
 import soot.SootMethod;
 import soot.Unit;
-import soot.UnitBox;
 import soot.Value;
 import soot.ValueBox;
 import soot.jimple.InvokeExpr;
-import soot.jimple.InvokeStmt;
 import soot.jimple.internal.ImmediateBox;
-import soot.jimple.internal.InvokeExprBox;
 import soot.jimple.internal.JAssignStmt;
-import soot.jimple.internal.JDynamicInvokeExpr;
-import soot.jimple.internal.JInterfaceInvokeExpr;
 import soot.jimple.internal.JInvokeStmt;
-import soot.jimple.internal.JSpecialInvokeExpr;
-import soot.jimple.internal.JStaticInvokeExpr;
-import soot.jimple.internal.JVirtualInvokeExpr;
-import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.toolkits.graph.Block;
 import soot.toolkits.graph.BlockGraph;
 import soot.toolkits.graph.BriefBlockGraph;
-import soot.toolkits.graph.BriefUnitGraph;
-import soot.toolkits.graph.UnitGraph;
 
 /**
  * Statically enumerates all of the intra class paths within a given class

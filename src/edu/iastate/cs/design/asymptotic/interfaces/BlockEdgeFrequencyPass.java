@@ -5,7 +5,6 @@ import java.util.Iterator;
 
 import edu.iastate.cs.design.asymptotic.datastructures.LoopInfo;
 import edu.iastate.cs.design.asymptotic.datastructures.Pair;
-import soot.Unit;
 import soot.toolkits.graph.Block;
 
 public interface BlockEdgeFrequencyPass {

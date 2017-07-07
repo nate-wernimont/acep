@@ -1,7 +1,6 @@
 package edu.iastate.cs.design.asymptotic.datastructures;
 
 import java.util.HashMap;
-import java.util.Map.Entry;
 
 public class ByteCodeToHashCode {
 	public final String[] jbc = { "push", "aconst_null", "iconst", "lconst",
