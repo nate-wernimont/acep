@@ -9,7 +9,9 @@ import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.Stack;
 
+import soot.Unit;
 import soot.jimple.toolkits.pointer.nativemethods.NativeMethodNotSupportedException;
+import soot.tagkit.Tag;
 
 public class Path<E> implements List<E>, Serializable {
 	
@@ -198,7 +200,7 @@ public class Path<E> implements List<E>, Serializable {
 		public Object next() {
 			if(this.hasNext()){
 				curr = curr.next;
-				return curr;
+				return curr.body;
 			}
 			throw new NoSuchElementException();
 		}
@@ -283,7 +285,9 @@ public class Path<E> implements List<E>, Serializable {
 
 	@Override
 	public E get(int index) {
-		throw new NativeMethodNotSupportedException();
+		if(index >= size)
+			throw new IndexOutOfBoundsException();
+		return getElements().get(index);
 	}
 
 	@Override
@@ -339,13 +343,36 @@ public class Path<E> implements List<E>, Serializable {
 		Node thisNode = this.root.next;
 		Node thatNode = that.root.next;
 		while(thisNode.body != null){
-			if(!thisNode.body.equals(thatNode.body)){
+			if(thisNode.body instanceof Unit){//A common use of this class, and Unit doesn't provide its own equals
+				if(!unitEquals((Unit)thisNode.body, (Unit)thatNode.body)){
+					if(!this.toString().equals(that.toString()))
+						return false;
+				}
+			} else if(!thisNode.body.equals(thatNode.body)){
 				return false;
 			}
 			thisNode = thisNode.next;
 			thatNode = thatNode.next;
 		}
 		return true;
+	}
+	
+	public static boolean unitEquals(Unit unit1, Unit unit2){
+		if(unit1 == null && unit2 == null)
+			return true;
+		if(unit1 == null || unit2 == null)
+			return false;
+		for(int i = 0; i < unit1.getTags().size(); i++){
+			if(!(unit1.getTags().get(i).getName().equals(unit2.getTags().get(i).getName()) && unit1.getTags().get(i).toString().equals(unit2.getTags().get(i).toString())))
+				return false;
+		}
+		
+		return (unit1.branches() == unit2.branches()) &&
+				(unit1.fallsThrough() == unit2.fallsThrough()) &&
+				unit1.getUseAndDefBoxes().toString().equals(unit2.getUseAndDefBoxes().toString()) &&
+				unit1.getBoxesPointingToThis().equals(unit2.getBoxesPointingToThis()) &&
+				unit1.getUnitBoxes().equals(unit2.getUnitBoxes()) &&
+				unit1.getClass().equals(unit2.getClass());
 	}
 
 }

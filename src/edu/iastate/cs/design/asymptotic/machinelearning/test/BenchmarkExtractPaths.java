@@ -4,7 +4,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import edu.iastate.cs.design.asymptotic.annotations.ParameterScale;
 import edu.iastate.cs.design.asymptotic.machinelearning.calculation.FeatureStatistic;
+import edu.iastate.cs.design.asymptotic.machinelearning.calculation.FeatureStatistic.Count;
+import edu.iastate.cs.design.asymptotic.machinelearning.calculation.FeatureStatistic.Coverage;
 import edu.iastate.cs.design.asymptotic.machinelearning.calculation.Path;
 import edu.iastate.cs.design.asymptotic.machinelearning.calculation.PathEnumerator;
 import edu.iastate.cs.design.asymptotic.tests.benchmarks.Benchmark;
@@ -36,6 +39,11 @@ public class BenchmarkExtractPaths {
 			pe.run();
 			HashMap<Path<Unit>, FeatureStatistic> features = pe.getFeatureStatistics();
 			System.out.println("Paths: "+features.size());
+			for(Path<Unit> path : features.keySet()){
+				FeatureStatistic fs = features.get(path);
+				System.out.println(path);
+				System.out.println(fs);
+			}
 		}
 	}
 	

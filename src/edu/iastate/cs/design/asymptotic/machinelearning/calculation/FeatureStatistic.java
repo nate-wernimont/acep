@@ -7,17 +7,13 @@ package edu.iastate.cs.design.asymptotic.machinelearning.calculation;
  */
 public class FeatureStatistic {
 	
-	public interface Feature {
-		int identifier = 0;
-	}
-	
 	/**
 	 * 
 	 * @author nate
 	 * All of the features that are counted
 	 *
 	 */
-	public enum Count implements Feature {
+	public enum Count {
 		COMPARISONS				,
 		NEW						,
 		THIS					,
@@ -50,7 +46,7 @@ public class FeatureStatistic {
 	 * @author nate
 	 *
 	 */
-	public enum Coverage implements Feature {
+	public enum Coverage {
 		FIELDS				,
 		FIELDS_WRITTEN		,
 		INVOCATIONS			,
@@ -102,11 +98,11 @@ public class FeatureStatistic {
 	 * Reset the counts and coverages
 	 */
 	public void reset(){
-		for(int i : counts){
-			i = 0;
+		for(int i = 0; i < counts.length; i++){
+			counts[i] = 0;
 		}
-		for(float f : coverages){
-			f = 0;
+		for(int i = 0; i < coverages.length; i++){
+			coverages[i] = (float) 0.00;
 		}
 	}
 	
@@ -132,11 +128,12 @@ public class FeatureStatistic {
 	 * @param feature Feature to fetch the value of
 	 * @return The value of feature
 	 */
-	public Number getValue(Feature feature){
-		if(feature instanceof Count)
-			return counts[Feature.identifier];
-		else
-			return coverages[Feature.identifier];
+	public int getValue(Count count){
+		return counts[count.identifier];
+	}
+	
+	public float getValue(Coverage coverage){
+		return coverages[coverage.identifier];
 	}
 	
 	/**

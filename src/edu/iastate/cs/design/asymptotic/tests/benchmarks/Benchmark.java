@@ -185,7 +185,8 @@ public class Benchmark {
 		_excludes.add("java");//TODO: excludes
 		Options.v().set_exclude(_excludes);
 		// Mention the starting point and the main method
-		SootClass c = Scene.v().loadClassAndSupport(_class);
+		SootClass c = Scene.v().forceResolve(_class, SootClass.SIGNATURES);
+		Scene.v().loadClassAndSupport(_class);
 		_sootMethod = c.getMethodByName(_method);
 		
 		// TODO: temporary fix for ppgp

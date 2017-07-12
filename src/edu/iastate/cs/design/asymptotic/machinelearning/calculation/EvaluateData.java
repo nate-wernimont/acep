@@ -3,10 +3,12 @@ package edu.iastate.cs.design.asymptotic.machinelearning.calculation;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import org.nustaq.serialization.FSTConfiguration;
@@ -65,7 +67,7 @@ public class EvaluateData {
 	/**
 	 * List of all of the hot paths
 	 */
-	private List<Path<Unit>> _hot_paths;
+	private List<Path<Unit>> _hot_paths, _cold_paths;
 	
 	/**
 	 * The evaluator object
@@ -73,6 +75,12 @@ public class EvaluateData {
 	private Evaluation evaluator = null;
 	
 	FSTConfiguration conf = FSTConfiguration.getDefaultConfiguration().setForceSerializable(true);
+	
+	private ArrayList<String> hotVals;
+	
+	public EvaluateData(){
+		
+	}
 	
 	/**
 	 * Evaluate the data
@@ -89,6 +97,10 @@ public class EvaluateData {
 		training_statistics = new HashMap<Path<Unit>, FeatureStatistic>();
 		eval_statistics = new HashMap<Path<Unit>, FeatureStatistic>();
 		_hot_paths = new ArrayList<>();
+		_cold_paths = new ArrayList<>();
+		hotVals = new ArrayList<String>();
+		hotVals.add("Hot");
+		hotVals.add("Cold");
 	}
 	
 	/**
@@ -98,15 +110,12 @@ public class EvaluateData {
 		System.out.println("Collecting Statistics");
 		collectStatistics(_training_configs, training_statistics);
 		collectStatistics(_eval_configs, eval_statistics);
-		System.out.println("Evaluating Data");
-		generateData(training_data, training_statistics);
-		generateData(eval_data, eval_statistics);
-		try {
-			System.out.println("Evalauting data");
-			evaluateWeka();
-		} catch (Exception e) {
-			throw new Error("Weka encountered an error");
-		}
+		System.out.println("Generating Data");
+		setupData();
+		addData(training_data, training_statistics, false);
+		addData(eval_data, eval_statistics, true);
+		System.out.println("Evalauting data");
+		evaluateWeka();
 	}
 	
 	/**
@@ -119,9 +128,9 @@ public class EvaluateData {
 		List<Pair<Path<Unit>, Integer>> result = new ArrayList<>();
 		File results = new File(filename);
 		System.out.println("Looking among "+possiblePaths.size()+" paths.");
-		for(Path<Unit> path : possiblePaths){
-			System.out.println(path);
-		}
+//		for(Path<Unit> path : possiblePaths){
+//			System.out.println(path);
+//		}
 		try(FileInputStream reader = new FileInputStream(results)){
 			byte[] in = new byte[(int) results.length()];
 			reader.read(in);
@@ -129,6 +138,11 @@ public class EvaluateData {
 			for(Pair<Path<Unit>, Integer> pair : paths){
 				if(!possiblePaths.contains(pair.first())){
 					System.out.println("Path Not Found: "+pair);
+					pair.setFirst(findClosest(pair.first(), possiblePaths));
+					result.add(pair);
+				} else {
+					System.out.println("Path Found: "+pair);
+					result.add(pair);
 				}
 			}
 		} catch (FileNotFoundException e) {
@@ -139,6 +153,21 @@ public class EvaluateData {
 			throw new Error("Error encountered while reading from results file!");
 		}
 		return result;
+	}
+	
+	private Path<Unit> findClosest(Path<Unit> toMatch, List<Path<Unit>> possibleMatches){
+		ArrayList<Path<Unit>> match = new ArrayList<>(possibleMatches);
+		for(int i = 0; i < toMatch.size(); i++){
+			for(Iterator<Path<Unit>> pathIter = match.iterator(); pathIter.hasNext();){
+				Path<Unit> toEval = pathIter.next();
+				if(match.size() == 1)
+					return match.get(0);
+				if(!toMatch.get(i).getTags().get(0).toString().equals(toEval.get(i).getTags().get(0))){
+					pathIter.remove();
+				}
+			}
+		}
+		return match.get(0);
 	}
 	
 	/**
@@ -165,12 +194,16 @@ public class EvaluateData {
 				pathCounts.remove(evaluating+1);
 			}
 		}
-		System.out.println(pathCounts);
+//		System.out.println(pathCounts);
 		int limit = (int) (pathCounts.size() * HOT_PATH_PERCENTAGE);
 		System.out.println("Getting first "+limit+" paths from "+pathCounts.size());
 		for(int i = 0; i < limit; i++){
 			System.out.println(pathCounts.get(i));
 			_hot_paths.add(pathCounts.get(i).first());
+		}
+		for(int i = limit; i < pathCounts.size(); i++){
+			System.out.println(pathCounts.get(i));
+			_cold_paths.add(pathCounts.get(i).first());
 		}
 	}
 	
@@ -178,11 +211,45 @@ public class EvaluateData {
 	 * Build the classifier and evaluate it on the eval data
 	 * @throws Exception
 	 */
-	private void evaluateWeka() throws Exception {
-		_classifier.buildClassifier(training_data);
-		evaluator = new Evaluation(training_data);
-		evaluator.evaluateModel(_classifier, eval_data);
+	private void evaluateWeka() {
+		System.out.println(training_data);
+		try {
+			_classifier.buildClassifier(training_data);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("Failed building Classifier");
+		}
+		try {
+			evaluator = new Evaluation(training_data);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("Failed building Evaluator");
+		}
+		try {
+			evaluator.evaluateModel(_classifier, eval_data);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("Failed evaluating model");
+		}
 		System.out.println(evaluator.correct()+", "+evaluator.incorrect());
+		double[][] confusionMatrix = evaluator.confusionMatrix();
+		System.out.println(confusionMatrix[0][0]+":"+confusionMatrix[0][1]+"\n"+confusionMatrix[1][0]+":"+confusionMatrix[1][1]);
+		File f = new File("Training.txt");
+		File f2 = new File("Evaluating.txt");
+		try(FileOutputStream fos = new FileOutputStream(f)){
+			f.createNewFile();
+			fos.write(conf.asByteArray(training_data));
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new Error("Error occurred while writing to the results file!");
+		}
+		try(FileOutputStream fos = new FileOutputStream(f2)){
+			f2.createNewFile();
+			fos.write(conf.asByteArray(eval_data));
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new Error("Error occurred while writing to the results file!");
+		}
 	}
 	
 	/**
@@ -191,19 +258,22 @@ public class EvaluateData {
 	 * @param map A map in which to put all of the newly found FeatureStatistics
 	 */
 	private void collectStatistics(List<String> configs, HashMap<Path<Unit>, FeatureStatistic> map){
+		List<SootClass> classesDone = new ArrayList<>();
 		for(String config : configs){
 			new Test(config);
 			
 			List<Path<Unit>> possiblePaths = new ArrayList<>();
 			
 			for(SootClass _class : Scene.v().getApplicationClasses()){
-				if(_class.isLibraryClass() || _class.isJavaLibraryClass() || !_class.isConcrete()){
+				if(_class.isLibraryClass() || _class.isJavaLibraryClass() || !_class.isConcrete() || classesDone.contains(_class)){
 					continue;
 				}
-				PathEnumerator calculateInfo = new PathEnumerator(_class);
+				PathEnumerator calculateInfo = new PathEnumerator(_class, false);
 				calculateInfo.run();
 				possiblePaths.addAll(calculateInfo.getPaths());
 				map.putAll(calculateInfo.getFeatureStatistics());
+				if(!_class.getPackageName().contains("jgfutil"))
+					classesDone.add(_class);
 			}
 			
 			getHotPaths(collectResults("results/results_"+Scene.v().getMainClass().getShortName()+".txt", possiblePaths));
@@ -212,12 +282,7 @@ public class EvaluateData {
 		}
 	}
 	
-	/**
-	 * Puts all of the feature statistics and hot path information into Weka usable data objects
-	 * @param data Where to put the newly created data
-	 * @param statistics The object containing all of the original information
-	 */
-	private void generateData(Instances data, HashMap<Path<Unit>, FeatureStatistic> statistics){
+	private void setupData(){
 		//Create data framework
 		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
 		for(Count count : FeatureStatistic.Count.values()){
@@ -226,17 +291,34 @@ public class EvaluateData {
 		for(Coverage coverage : FeatureStatistic.Coverage.values()){
 			attributes.add(new Attribute(coverage.name()+"_COVERAGE"));
 		}
-		ArrayList<String> hotVals = new ArrayList<String>();
-		hotVals.add("Hot");
-		hotVals.add("Cold");
-		attributes.add(new Attribute("Hot Path", hotVals));
-		data = new Instances(_name+data.hashCode(), attributes, 0);
-		
+		Attribute hotAttr = new Attribute("Hot Path", hotVals);
+		attributes.add(hotAttr);
+		training_data = new Instances(_name+"-training", attributes, 0);
+		eval_data = new Instances(_name+"-eval", attributes, 0);
+		training_data.setClass(hotAttr);
+		eval_data.setClass(hotAttr);
+	}
+	
+	/**
+	 * Puts all of the feature statistics and hot path information into Weka usable data objects
+	 * @param data Where to put the newly created data
+	 * @param statistics The object containing all of the original information
+	 */
+	private void addData(Instances data, HashMap<Path<Unit>, FeatureStatistic> statistics, boolean eval){
+		ArrayList<Path<Unit>> coldAndHot = new ArrayList<>(_hot_paths);
+		ArrayList<Path<Unit>> pathsToEval = new ArrayList<>(statistics.keySet());
+		coldAndHot.addAll(_cold_paths);
+//		if(!eval){
+			System.out.println("Before: "+pathsToEval.size()+":"+statistics.size());
+			pathsToEval.retainAll(coldAndHot);
+			System.out.println("After: "+pathsToEval.size());
+//		}
 		//Add the actual data
-		for(Path<Unit> path : statistics.keySet()){
-			double[] dataValues = new double[training_data.numAttributes()];
+		for(Path<Unit> path : pathsToEval){
+			double[] dataValues = new double[data.numAttributes()];
 			FeatureStatistic feature = statistics.get(path);
 			for(Count count : FeatureStatistic.Count.values()){
+				System.out.println(count.name()+": "+feature.getValue(count));
 				dataValues[count.ordinal()] = (int) feature.getValue(count);
 			}
 			for(Coverage coverage : FeatureStatistic.Coverage.values()){

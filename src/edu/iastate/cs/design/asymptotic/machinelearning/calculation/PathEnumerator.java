@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
@@ -14,6 +15,7 @@ import edu.iastate.cs.design.asymptotic.datastructures.Pair;
 import edu.iastate.cs.design.asymptotic.machinelearning.calculation.FeatureStatistic.Count;
 import edu.iastate.cs.design.asymptotic.machinelearning.calculation.FeatureStatistic.Coverage;
 import soot.Body;
+import soot.ResolutionFailedException;
 import soot.SootClass;
 import soot.SootField;
 import soot.SootMethod;
@@ -85,18 +87,22 @@ public class PathEnumerator {
 			System.out.println("===="+_class.getName()+"====");
 		findIntraMethodPaths();
 		blockToUnits();
-		/*for(SootMethod sm : _class.getMethods()){
-			System.out.println("==="+sm.getName()+"===");
-			for(Path<Block> path : block_map.get(sm)){
-				System.out.print("Start -> ");
-				for(Block b : path.getElements()){
-					System.out.print(b.toShortString() + " -> ");
-				}
-				System.out.println("End");
-			}
-		}*/
+//		for(SootMethod sm : _class.getMethods()){
+//			System.out.println("==="+sm.getName()+"===");
+//			for(Path<Block> path : block_map.get(sm)){
+//				System.out.print("Start -> ");
+//				for(Block b : path.getElements()){
+//					System.out.print(b.toShortString() + " -> ");
+//				}
+//				System.out.println("End");
+//			}
+//			System.out.println(new BriefBlockGraph(sm.retrieveActiveBody()).getBlocks());
+//		}
+//		for(SootMethod sm : _class.getMethods()){
+//			System.out.println(sm.getName()+": "+block_map.get(sm).size());
+//		}
 		findIntraClassPaths();
-		calculateCounts();
+		calculateCounts(getPaths(), features);
 	}
 	
 	/**
@@ -143,136 +149,69 @@ public class PathEnumerator {
 	 */
 	private void findIntraClassPaths(){
 		Queue<SootMethod> toDo = new LinkedBlockingQueue<SootMethod>();
-		Queue<SootMethod> initialPass = new LinkedBlockingQueue<SootMethod>();
-		HashMap<Path<Unit>, List<Unit>> visitedMeths = new HashMap<>();
+		List<Pair<Path<Unit>, List<Pair<Unit, SootMethod>>>> visitedMeths = new ArrayList<>();
+		HashSet<Path<Unit>> testSet = new HashSet<>();
 		
 		for(SootMethod meth : _class.getMethods()){
-			initialPass.add(meth);
+			toDo.add(meth);
 		}
 		
 		int maxMethodsVisited = 0;
 		
-		//This does a first pass through, which collects the method invocations only from the method that it is analyzing
-		while(!initialPass.isEmpty()){
-			SootMethod original_meth = initialPass.poll();
-			List<Path<Unit>> original_paths = new ArrayList<Path<Unit>>(unit_map.get(original_meth));
-			boolean changed = false;
-			for(Path<Unit> original_path : original_paths){
-				for(Unit unit : original_path.getElements()){
-					SootMethod method_called = methodInvocation(unit);
-					if(method_called != null){
-						FeatureStatistic updateMethodsCalled = features.get(original_path);
-						if(updateMethodsCalled == null){//It didnt have one yet
-							updateMethodsCalled = new FeatureStatistic();
-							features.put(original_path, updateMethodsCalled);
-						}
-						List<Unit> oldVisitedMeths = visitedMeths.get(original_path);
-						if(oldVisitedMeths == null){
-							oldVisitedMeths = new ArrayList<Unit>();
-							visitedMeths.put(original_path, oldVisitedMeths);
-						}
-						if(method_called.equals(original_meth)){//local invocation of itself
-							//I do not want this path - it involves an infinite loop and I only want one element of each
-							unit_map.get(original_meth).remove(original_path);
-							features.remove(original_path);
-						} else if(method_called.getDeclaringClass().equals(_class) && !oldVisitedMeths.contains(unit)){
-							for(Path<Unit> path_in_path : unit_map.get(method_called)){
-								if(original_path.contains(path_in_path.getElements().get(0))){//local invocation of a method that has already been called
-									unit_map.get(original_meth).remove(original_path);
-									features.remove(original_path);
-									continue;
-								}
-								//remake the path
-								updateMethodsCalled = new FeatureStatistic(updateMethodsCalled);
-								Path<Unit> newPath = original_path.copy();
-								if(unit instanceof JAssignStmt){
-									newPath.insertBefore(unit, path_in_path);
-								} else {
-									newPath.insertAfter(unit, path_in_path);
-								}
-								List<Path<Unit>> paths = unit_map.get(original_meth);
-								paths.remove(original_path);
-								paths.add(newPath);
-								unit_map.put(original_meth, paths);
-								List<Unit> updateVisitedMeths = new ArrayList<>(oldVisitedMeths);
-								updateVisitedMeths.add(unit);
-								visitedMeths.remove(original_path);
-								visitedMeths.put(newPath, updateVisitedMeths);
-								changed = true;
-								
-								//Update featurecount
-								features.remove(original_path);
-								updateMethodsCalled.increment(Count.INVOCATIONS);
-								updateMethodsCalled.increment(Count.LOCAL_INVOCATIONS);
-								features.put(newPath, updateMethodsCalled);
-							}
-						} else {
-							updateMethodsCalled.increment(Count.INVOCATIONS);
-							updateMethodsCalled.increment(Count.NON_LOCAL_INVOCATIONS);
-						}
-						if(((int)updateMethodsCalled.getValue(Count.INVOCATIONS)) > maxMethodsVisited)
-							maxMethodsVisited = (int) updateMethodsCalled.getValue(Count.INVOCATIONS);
-					}
-				}
-			}
-			if(changed){
-				toDo.add(original_meth);
-			}
-		}
-		
-		//Get the invocations coverage
-		for(SootMethod sm : _class.getMethods()){
-			for(Path<Unit> p : unit_map.get(sm)){
-				FeatureStatistic fc = features.get(p);
-				if(fc == null)
-					fc = new FeatureStatistic();
-				if(maxMethodsVisited > 0)
-					fc.setValue(Coverage.INVOCATIONS, ((int)fc.getValue(Count.INVOCATIONS))/maxMethodsVisited);
-				else
-					fc.setValue(Coverage.INVOCATIONS, 0);
-				features.put(p, fc);
-			}
-		}
-		
-		//Finish flattening out the class
 		while(!toDo.isEmpty()){
 			SootMethod original_meth = toDo.poll();
 			List<Path<Unit>> original_paths = new ArrayList<Path<Unit>>(unit_map.get(original_meth));
 			boolean changed = false;
+			int count = 0;
+			nextPath:
 			for(Path<Unit> original_path : original_paths){
-				for(Unit unit : original_path.getElements()){
-					SootMethod method_called = methodInvocation(unit);
-					if(method_called != null){
-						List<Unit> oldVisitedMeths = visitedMeths.get(original_path);
-						if(oldVisitedMeths == null){
-							oldVisitedMeths = new ArrayList<Unit>();
-							visitedMeths.put(original_path, oldVisitedMeths);
-						}
-						if(method_called.getDeclaringClass().equals(_class) && !method_called.equals(original_meth) && !oldVisitedMeths.contains(unit)){
-							for(Path<Unit> path_in_path : unit_map.get(method_called)){
-								if(original_path.contains(path_in_path.getElements().get(0)))//local invocation of a method that has already been called
-									continue;
-								
-								//remake the path
-								Path<Unit> newPath = original_path.copy();
-								if(unit instanceof JAssignStmt){
-									newPath.insertBefore(unit, path_in_path);
-								} else {
-									newPath.insertAfter(unit, path_in_path);
+				count++;
+				for(Iterator<Unit> unitIter = original_path.iterator(); unitIter.hasNext();){
+					Unit unit = unitIter.next();
+					SootMethod methodInvoked;
+					if((methodInvoked = methodInvocation(unit)) != null){
+						if(!methodInvoked.equals(original_meth) && methodInvoked.getDeclaringClass().equals(_class)){
+							boolean visitedBefore = false;
+							Pair<Path<Unit>, List<Pair<Unit, SootMethod>>> currentPathvMethInfo = findPair(original_path, visitedMeths);
+							if(currentPathvMethInfo == null)
+								currentPathvMethInfo = new Pair(new Path<>(), new ArrayList<>());
+							for(Pair<Unit, SootMethod> methodsCalled : currentPathvMethInfo.second()){
+								if(methodsCalled.first().equals(unit)){
+									visitedBefore = true;
 								}
-								List<Path<Unit>> paths = unit_map.get(original_meth);
-								paths.remove(original_path);
-								paths.add(newPath);
-								unit_map.put(original_meth, paths);
-								changed = true;
-								List<Unit> updateVisitedMeths = new ArrayList<>(oldVisitedMeths);
-								updateVisitedMeths.add(unit);
-								visitedMeths.remove(original_path);
-								visitedMeths.put(newPath, updateVisitedMeths);
-								
-								//Propagate the features count
-								FeatureStatistic feature = features.get(original_path);
-								features.put(newPath, new FeatureStatistic(feature));
+								if(methodsCalled.second().equals(methodInvoked)){
+									visitedBefore = true;
+								}
+							}
+							
+							if(!visitedBefore){
+								List<Path<Unit>> originalMethPaths = unit_map.get(original_meth);
+								boolean first = true;
+								for(Path<Unit> methodInvokedPath : unit_map.get(methodInvoked)){
+									if(first){
+										first = false;
+										originalMethPaths.remove(original_path);
+										visitedMeths.remove(currentPathvMethInfo);
+									}
+									changed = true;
+									Path<Unit> newPath = new Path<>(original_path);
+									if(unit instanceof JAssignStmt){
+										newPath.insertBefore(unit, methodInvokedPath);
+									} else {
+										newPath.insertAfter(unit, methodInvokedPath);
+									}
+									Pair<Path<Unit>, List<Pair<Unit, SootMethod>>> newVisitedMethInfo = null;
+									newVisitedMethInfo = new Pair(new Path<>(currentPathvMethInfo.first()), new ArrayList<>(currentPathvMethInfo.second()));
+									newVisitedMethInfo.second().add(new Pair(unit, methodInvoked));
+									originalMethPaths.add(newPath);
+									newVisitedMethInfo.setFirst(newPath);
+									Pair<Path<Unit>, List<Pair<Unit, SootMethod>>> otherPathVisitedMethInfo = findPair(methodInvokedPath, visitedMeths);
+									if(otherPathVisitedMethInfo != null)
+										newVisitedMethInfo.second().addAll(otherPathVisitedMethInfo.second());
+									visitedMeths.add(newVisitedMethInfo);
+									//System.out.println("Adding a new path! "+originalMethPaths.size()+" : "+original_paths.size()+" : "+" : "+methodInvokedPath+" : "+count);
+								}
+								continue nextPath;
 							}
 						}
 					}
@@ -282,166 +221,208 @@ public class PathEnumerator {
 				toDo.add(original_meth);
 			}
 		}
+		
+	}
+	
+	private Pair<Path<Unit>, List<Pair<Unit, SootMethod>>> findPair(Path<Unit> pathToFind, List<Pair<Path<Unit>, List<Pair<Unit, SootMethod>>>> toSearch){
+		for(Pair<Path<Unit>, List<Pair<Unit, SootMethod>>> pair : toSearch){
+			if(pair.first().equals(pathToFind))
+				return pair;
+		}
+		return null;
 	}
 	
 	/**
 	 * Calculate all of the feature counts for each path
 	 */
-	private void calculateCounts(){
+	public void calculateCounts(List<Path<Unit>> paths, Map<Path<Unit>, FeatureStatistic> featuresMap){
+		//Get the invocations count
+		int maxInvocations = 0;
+		for(Path<Unit> path : paths){
+			FeatureStatistic feature = new FeatureStatistic();
+			int invocations = 0;
+			SootMethod initialMethod = null;
+			for(SootMethod sm : _class.getMethods()){
+				if(Path.unitEquals(sm.retrieveActiveBody().getUnits().getFirst(), path.getElements().get(0))){
+					initialMethod = sm;
+					break;
+				}
+					
+			}
+			for(Unit unit : path.getElements()){
+				if(methodInvocation(unit) != null){
+					invocations++;
+					feature.increment(Count.INVOCATIONS);
+					if(initialMethod.retrieveActiveBody().getUnits().contains(unit)){
+						feature.increment(Count.LOCAL_INVOCATIONS);
+					} else {
+						feature.increment(Count.NON_LOCAL_INVOCATIONS);
+					}
+				}
+			}
+			featuresMap.put(path, feature);
+			maxInvocations = invocations > maxInvocations ? invocations : maxInvocations;
+		}
+		
+		//Get the invocations coverages
+		for(Path<Unit> path : paths){
+			FeatureStatistic feature = featuresMap.get(path);
+			feature.setValue(Coverage.INVOCATIONS, (float)(feature.getValue(Count.INVOCATIONS)/maxInvocations));
+		}
+		
+		
 		int maxFieldsWritten = 0;
 		int maxVariablesAccessed = 0;
 		int maxParametersUsed = 0;
 		
-		for(SootMethod sm : _class.getMethods()){
-			for(Path<Unit> path : unit_map.get(sm)){
-				FeatureStatistic feature = features.get(path);
-				Set<Value> localVariables = new HashSet<Value>();
-				Set<Value> allVariables = new HashSet<Value>();
-				for(Unit unit : path.getElements()){
-					feature.increment(Count.STATEMENTS);
-					switch(unit.getClass().getSimpleName()){
-					case "JAssignStmt":
-						Value varValue = null;
-						Pair<Value, Boolean> localVariable = new Pair<Value, Boolean>(null, false);
-						for(ValueBox box : unit.getUseBoxes()){
-							if(box.getClass().getSimpleName().equals("JimpleLocalBox")){
-								localVariable.setFirst(box.getValue());
-								localVariable.setSecond(true);
-							} else if(box.getClass().getSimpleName().equals("LinkedRValueBox")){
-								if(box.getValue().getUseBoxes().size() > 1){//More than one operand
-									for(Object useBox : box.getValue().getUseBoxes()){
-										if(useBox.getClass().getSimpleName().equals("ImmediateBox")){
-											ImmediateBox value = (ImmediateBox) useBox;
-											if(value.getValue().getClass().getSimpleName().equals("JimpleLocal")){
-												localVariables.add(box.getValue());
-												allVariables.add(box.getValue());
-												feature.increment(Count.DEREFERENCES);
-											}
+		for(Path<Unit> path : paths){
+			FeatureStatistic feature = featuresMap.get(path);
+			if(feature == null)
+				feature = new FeatureStatistic();
+			Set<Value> localVariables = new HashSet<Value>();
+			Set<Value> allVariables = new HashSet<Value>();
+			for(Unit unit : path.getElements()){
+				feature.increment(Count.STATEMENTS);
+				switch(unit.getClass().getSimpleName()){
+				case "JAssignStmt":
+					Value varValue = null;
+					Pair<Value, Boolean> localVariable = new Pair<Value, Boolean>(null, false);
+					for(ValueBox box : unit.getUseBoxes()){
+						if(box.getClass().getSimpleName().equals("JimpleLocalBox")){
+							localVariable.setFirst(box.getValue());
+							localVariable.setSecond(true);
+						} else if(box.getClass().getSimpleName().equals("LinkedRValueBox")){
+							if(box.getValue().getUseBoxes().size() > 1){//More than one operand
+								for(Object useBox : box.getValue().getUseBoxes()){
+									if(useBox.getClass().getSimpleName().equals("ImmediateBox")){
+										ImmediateBox value = (ImmediateBox) useBox;
+										if(value.getValue().getClass().getSimpleName().equals("JimpleLocal")){
+											localVariables.add(box.getValue());
+											allVariables.add(box.getValue());
+											feature.increment(Count.DEREFERENCES);
 										}
 									}
-								} else {
-									if(box.getValue().getClass().getSimpleName().equals("JimpleLocal")){
-										localVariables.add(box.getValue());
-										allVariables.add(box.getValue());
-										feature.increment(Count.DEREFERENCES);
-									} else if(box.getValue().getClass().getSimpleName().equals("JInstanceFieldRef")){
-										feature.increment(Count.DEREFERENCES);
-										feature.increment(Count.THIS);
-										allVariables.add(box.getValue());
-									}
 								}
-								if(box.getValue().getClass().getSimpleName().equals("JNewExpr"))//new
-									feature.increment(Count.NEW);
-							}
-						}
-						for(ValueBox box : unit.getDefBoxes()){
-							if(box.getClass().getSimpleName().equals("LinkedVariableBox")){
-								varValue = box.getValue();
-								allVariables.add(varValue);
-								if(localVariable.second() && localVariable.first().equals(box.getValue())){
-									localVariables.add(varValue);
-								}
-								
-								if(varValue.getClass().getSimpleName().equals("JInstanceFieldRef")){
-									feature.increment(Count.THIS);//This covers if statements as well
+							} else {
+								if(box.getValue().getClass().getSimpleName().equals("JimpleLocal")){
+									localVariables.add(box.getValue());
+									allVariables.add(box.getValue());
+									feature.increment(Count.DEREFERENCES);
+								} else if(box.getValue().getClass().getSimpleName().equals("JInstanceFieldRef")){
+									feature.increment(Count.DEREFERENCES);
+									feature.increment(Count.THIS);
+									allVariables.add(box.getValue());
 								}
 							}
-						}
-						
-						
-						feature.increment(Count.ASSIGNMENTS);
-						break;
-					case "JBreakpointStmt":
-						break;
-					case "JEnterMonitorStmt":
-						break;
-					case "JExitMonitorStmt":
-						break;
-					case "JGotoStmt":
-						feature.increment(Count.GOTO);
-						break;
-					case "JIdentityStmt":
-						for(ValueBox vb : unit.getUseBoxes()){
-							if(vb.getValue().getClass().getSimpleName().equals("ParameterRef")){
-								feature.increment(Count.PARAMETERS);
-							}
-						}
-						break;
-					case "JIfStmt":
-						feature.increment(Count.IF);
-						for(ValueBox box : unit.getUseBoxes()){
-							for(Object useBox : box.getValue().getUseBoxes()){
-								if(useBox.getClass().getSimpleName().equals("ImmediateBox")){
-									ImmediateBox value = (ImmediateBox) useBox;
-									if(value.getValue().getClass().getSimpleName().equals("JimpleLocal")){
-										localVariables.add(box.getValue());
-										allVariables.add(box.getValue());
-										feature.increment(Count.DEREFERENCES);
-									}
-								}
-							}
-							if(box.getClass().getSimpleName().equals("ConditionExprBox")){
-								feature.increment(Count.COMPARISONS);
-							}
-						}
-						break;
-					case "JInvokeStmt":
-						break;
-					case "JLookupSwitchStmt":
-						break;
-					case "JNopStmt":
-						break;
-					case "JRetStmt":
-					case "JReturnStmt":
-					case "JReturnVoidStmt":
-						feature.increment(Count.RETURN);
-						break;
-					case "JTableSwitchStmt":
-						break;
-					case "JThrowStmt":
-						feature.increment(Count.THROW);
-						break;
-					default:
-						System.out.println("Weird: "+unit.getClass().getName()+", "+unit.getClass().getSimpleName());
-					}
-				}
-				
-				feature.increment(Count.ALL_VARIABLES, allVariables.size());
-				feature.increment(Count.LOCAL_VARIABLES, localVariables.size());
-				
-				Iterator<SootField> fieldsWrittenIter = _class.getFields().snapshotIterator();
-				Set<SootField> fields = new HashSet<SootField>();
-				while(fieldsWrittenIter.hasNext()){
-					SootField eval = fieldsWrittenIter.next();
-					for(Value v : allVariables){
-						if(v.toString().contains(eval.toString())){
-							fields.add(eval);
-							feature.increment(Count.FIELDS_WRITTEN);
+							if(box.getValue().getClass().getSimpleName().equals("JNewExpr"))//new
+								feature.increment(Count.NEW);
 						}
 					}
+					for(ValueBox box : unit.getDefBoxes()){
+						if(box.getClass().getSimpleName().equals("LinkedVariableBox")){
+							varValue = box.getValue();
+							allVariables.add(varValue);
+							if(localVariable.second() && localVariable.first().equals(box.getValue())){
+								localVariables.add(varValue);
+							}
+							
+							if(varValue.getClass().getSimpleName().equals("JInstanceFieldRef")){
+								feature.increment(Count.THIS);//This covers if statements as well
+							}
+						}
+					}
+					
+					
+					feature.increment(Count.ASSIGNMENTS);
+					break;
+				case "JBreakpointStmt":
+					break;
+				case "JEnterMonitorStmt":
+					break;
+				case "JExitMonitorStmt":
+					break;
+				case "JGotoStmt":
+					feature.increment(Count.GOTO);
+					break;
+				case "JIdentityStmt":
+					for(ValueBox vb : unit.getUseBoxes()){
+						if(vb.getValue().getClass().getSimpleName().equals("ParameterRef")){
+							feature.increment(Count.PARAMETERS);
+						}
+					}
+					break;
+				case "JIfStmt":
+					feature.increment(Count.IF);
+					for(ValueBox box : unit.getUseBoxes()){
+						for(Object useBox : box.getValue().getUseBoxes()){
+							if(useBox.getClass().getSimpleName().equals("ImmediateBox")){
+								ImmediateBox value = (ImmediateBox) useBox;
+								if(value.getValue().getClass().getSimpleName().equals("JimpleLocal")){
+									localVariables.add(box.getValue());
+									allVariables.add(box.getValue());
+									feature.increment(Count.DEREFERENCES);
+								}
+							}
+						}
+						if(box.getClass().getSimpleName().equals("ConditionExprBox")){
+							feature.increment(Count.COMPARISONS);
+						}
+					}
+					break;
+				case "JInvokeStmt":
+					break;
+				case "JLookupSwitchStmt":
+					break;
+				case "JNopStmt":
+					break;
+				case "JRetStmt":
+				case "JReturnStmt":
+				case "JReturnVoidStmt":
+					feature.increment(Count.RETURN);
+					break;
+				case "JTableSwitchStmt":
+					break;
+				case "JThrowStmt":
+					feature.increment(Count.THROW);
+					break;
+				default:
+					System.out.println("Weird: "+unit.getClass().getName()+", "+unit.getClass().getSimpleName());
 				}
-				feature.setValue(Coverage.FIELDS, (float)fields.size()/_class.getFieldCount());
-				feature.increment(Count.FIELDS, fields.size());
-				
-				if(((int)feature.getValue(Count.FIELDS_WRITTEN)) > maxFieldsWritten)
-					maxFieldsWritten = (int) feature.getValue(Count.FIELDS_WRITTEN);
-				if(((int)feature.getValue(Count.LOCAL_VARIABLES)) > maxVariablesAccessed)
-					maxVariablesAccessed = (int) feature.getValue(Count.LOCAL_VARIABLES);
-				if(((int)feature.getValue(Count.PARAMETERS)) > maxParametersUsed)
-					maxParametersUsed = (int) feature.getValue(Count.PARAMETERS);
-				
-				features.put(path, feature);
 			}
+			
+			feature.increment(Count.ALL_VARIABLES, allVariables.size());
+			feature.increment(Count.LOCAL_VARIABLES, localVariables.size());
+			
+			Iterator<SootField> fieldsWrittenIter = _class.getFields().snapshotIterator();
+			Set<SootField> fields = new HashSet<SootField>();
+			while(fieldsWrittenIter.hasNext()){
+				SootField eval = fieldsWrittenIter.next();
+				for(Value v : allVariables){
+					if(v.toString().contains(eval.toString())){
+						fields.add(eval);
+						feature.increment(Count.FIELDS_WRITTEN);
+					}
+				}
+			}
+			feature.setValue(Coverage.FIELDS, (float)fields.size()/_class.getFieldCount());
+			feature.increment(Count.FIELDS, fields.size());
+			
+			if(feature.getValue(Count.FIELDS_WRITTEN) > maxFieldsWritten)
+				maxFieldsWritten = feature.getValue(Count.FIELDS_WRITTEN);
+			if(feature.getValue(Count.LOCAL_VARIABLES) > maxVariablesAccessed)
+				maxVariablesAccessed = feature.getValue(Count.LOCAL_VARIABLES);
+			if(feature.getValue(Count.PARAMETERS) > maxParametersUsed)
+				maxParametersUsed = feature.getValue(Count.PARAMETERS);
+			
+			featuresMap.put(path, feature);
 		}
+		
 		//coverage
-		for(SootMethod sm : _class.getMethods()){
-			for(Path<Unit> p : unit_map.get(sm)){
-				FeatureStatistic feature = features.get(p);
-				feature.setValue(Coverage.FIELDS_WRITTEN, ((int)feature.getValue(Count.FIELDS_WRITTEN))/maxFieldsWritten);
-				feature.setValue(Coverage.LOCAL_VARIABLES, ((int)feature.getValue(Count.LOCAL_VARIABLES))/maxVariablesAccessed);
-				feature.setValue(Coverage.PARAMETERS, ((int)feature.getValue(Count.PARAMETERS))/maxParametersUsed);
-				features.put(p, feature);
-			}
+		for(Path<Unit> path : paths){
+			FeatureStatistic feature = featuresMap.get(path);
+			feature.setValue(Coverage.FIELDS_WRITTEN, maxFieldsWritten > 0 ? (float)(feature.getValue(Count.FIELDS_WRITTEN)/maxFieldsWritten) : 0);
+			feature.setValue(Coverage.LOCAL_VARIABLES, maxVariablesAccessed > 0 ? (float)(feature.getValue(Count.LOCAL_VARIABLES)/maxVariablesAccessed) : 0);
+			feature.setValue(Coverage.PARAMETERS, maxParametersUsed > 0 ? (float)(feature.getValue(Count.PARAMETERS)/maxParametersUsed) : 0);
 		}
 	}
 	
@@ -452,7 +433,12 @@ public class PathEnumerator {
 	 */
 	public SootMethod methodInvocation(Unit unit){
 		if(unit instanceof JInvokeStmt){
-			return ((JInvokeStmt) unit).getInvokeExpr().getMethod();
+			try {
+				return ((JInvokeStmt) unit).getInvokeExpr().getMethod();
+			} catch(ResolutionFailedException e){
+				//This error only occurs when I use calculateCounts with my own paths, and I'm just checking for null or not
+				return _class.getMethods().get(0);
+			}
 		} else if(unit instanceof JAssignStmt){
 			for(ValueBox vb : unit.getUseBoxes()){
 				if(vb.getClass().getSimpleName().equals("LinkedRValueBox")){
@@ -471,20 +457,48 @@ public class PathEnumerator {
 	 * @param masterPaths A list of all of the paths through the method
 	 */
 	private void DFS(Stack<Block> blockStack, List<Path<Block>> masterPaths){
-		Block block = blockStack.peek();
-		List<Block> succs = block.getSuccs();
+		DFSwithStarter(blockStack, masterPaths, blockStack.peek(), null);
+	}
+	
+	private void DFSwithStarter(Stack<Block> blockStack, List<Path<Block>> masterPaths, Block startBlock, Block dontTravel){
+		List<Block> succs = startBlock.getSuccs();
 		if(succs.isEmpty()){//It is an exit node
 			Path<Block> pathToAdd = new Path<Block>(blockStack);
 			masterPaths.add(pathToAdd);
 			return;
 		}
 		for(Block succ : succs){
-			if(!blockStack.contains(succ)){
-				blockStack.push(succ);
-				DFS(blockStack, masterPaths);
-				blockStack.pop();
+			if(!succ.equals(dontTravel)){
+				if(!blockStack.contains(succ)){
+					blockStack.push(succ);
+					DFSwithStarter(blockStack, masterPaths, succ, null);
+					blockStack.pop();
+				} else if(getCount(blockStack, succ) == 1){
+					DFSwithStarter(blockStack, masterPaths, succ, loopHead(blockStack, succ));
+				}
 			}
 		}
+	}
+	
+	private Block loopHead(Stack<Block> blockStack, Block loopedTo){
+		Block lastBlock = blockStack.peek();
+		Stack<Block> copy = (Stack<Block>) blockStack.clone();
+		while(!copy.isEmpty()){
+			if(loopedTo.equals(copy.peek()))
+				return lastBlock;
+			lastBlock = copy.pop();
+		}
+		return null;
+	}
+	
+	private int getCount(Stack<Block> blockStack, Block block){
+		int count = 0;
+		List<Block> copy = new ArrayList<Block>(blockStack);
+		for(Block b : copy){
+			if(b.equals(block))
+				count++;
+		}
+		return count;
 	}
 	
 	/**

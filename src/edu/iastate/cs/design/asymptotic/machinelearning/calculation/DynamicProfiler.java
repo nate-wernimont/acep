@@ -89,6 +89,13 @@ public class DynamicProfiler {
 	public void runNewClass(){//TODO: try to get running
 		Options.v().set_soot_classpath(Options.v().output_dir()+":"+Options.v().soot_classpath());
 		try {
+			Object newClass = ClassLoader.getSystemClassLoader().loadClass(_class.getName()).newInstance();
+			((InstrumentedClass) newClass).main();
+		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		try {
 			Runtime.getRuntime().exec("./sootOutput/"+_class.getName().replace('.', '/')+".class");
 		} catch (IOException e) {
 			e.printStackTrace();

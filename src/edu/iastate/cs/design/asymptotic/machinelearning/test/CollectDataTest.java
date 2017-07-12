@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import edu.iastate.cs.design.asymptotic.machinelearning.calculation.EvaluateData;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.Classifier;
+import weka.classifiers.bayes.NaiveBayes;
+import weka.classifiers.trees.J48;
 
 public class CollectDataTest {
 	
@@ -20,7 +22,7 @@ public class CollectDataTest {
 			toTest.add(Integer.parseInt(arg));
 		}
 		
-		String[] classes = {"lufact", "series", "crypt", "sor", "sparsematmult"/*, "montecarlo"*/};
+		String[] classes = {/*"lufact",*/ "series", "crypt", "sor", /*"sparsematmult"*/, "montecarlo"};
 		ArrayList<String> training_configs = new ArrayList<>();
 		ArrayList<String> test_configs = new ArrayList<>();
 		for(int i = 0; i < classes.length; i++){
@@ -30,8 +32,8 @@ public class CollectDataTest {
 				training_configs.add(classes[i] + File.separator + "config.xml");
 		}
 		
-		Classifier classifier = AbstractClassifier.forName("J48", null);
-		EvaluateData data = new EvaluateData(training_configs, test_configs, classifier, toTest.toString());
+		Classifier classifier = new NaiveBayes();
+		EvaluateData data = new EvaluateData(training_configs, test_configs, classifier, classes[toTest.get(0)]);
 		data.run();
 	}
 }
