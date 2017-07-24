@@ -2,207 +2,123 @@ package edu.iastate.cs.design.asymptotic.machinelearning.calculation;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
-import java.util.NoSuchElementException;
-import java.util.Stack;
-
 import soot.Unit;
-import soot.jimple.toolkits.pointer.nativemethods.NativeMethodNotSupportedException;
-import soot.tagkit.Tag;
 
-public class Path<E> implements List<E>, Serializable {
+public class Path implements Iterable, Serializable {
 	
+	private ArrayList<Object> elemList;
 	
-	private class Node implements Serializable{
-		
-		private E body;
-		
-		private Node next;
-		
-		private Node prev;
-		
-		private Node(E body){
-			this();
-			this.body = body;
-		}
-		
-		private Node() {
-			body = null;
-			prev = null;
-			next = null;
-		}
-		
-	}
-	
-	private Node tail;
-	
-	private Node root;
-	
-	private int size;
-	
-	public Path(Stack<E> st){
-		this();
-		Stack<E> stack = new Stack<E>();
-		stack = (Stack<E>) st.clone();
-		while(!stack.isEmpty()){
-			this.addToStart(stack.pop());
-		}
-	}
-	
-	public Path(List<E> li){
-		this();
-		for(E e: li){
-			this.addToEnd(e);
+	public Path(Path copy){
+		init();
+		for(Object o : copy.elemList){
+			this.add(o);
 		}
 	}
 	
 	public Path(){
-		root = new Node(null);
-		tail = new Node(null);
-		root.next = tail;
-		tail.prev = root;
+		init();
 	}
 	
-	public void addToStart(E e){
-		addBefore(e, root.next);
+	private void init(){
+		elemList = new ArrayList<>();
 	}
 	
-	public boolean endsWith(E e){
-		return tail.prev.body.equals(e);
+	public int size(){
+		return elemList.size();
 	}
 	
-	public E getLast(){
-		return tail.prev.body;
+	public void add(Object o){
+		elemList.add(o);
 	}
 	
-	public boolean insertAfter(E addAfterThis, Path<E> toAdd){
-		boolean found = false;
-		Node curr = root.next;
-		while(curr.next != null){
-			if(curr.body.equals(addAfterThis)){
-				found = true;
-				break;
-			} else {
-				curr = curr.next;
-			}
-		}
-		if(found){
-			List<E> elementsToAdd = toAdd.getElements();
-			Node afterCurr = curr.next;
-			for(E eToAdd : elementsToAdd){
-				addBefore(eToAdd, afterCurr);
-			}
+	public boolean addAfter(Unit where, List<Path> toInsert){
+		int index = elemList.indexOf(where);
+		if(index >= 0){
+			elemList.add(index+1, toInsert);
 			return true;
 		} else {
 			return false;
 		}
 	}
 	
-	public boolean insertBefore(E addBeforeThis, Path<E> toAdd){
-		boolean found = false;
-		Node curr = root.next;
-		while(curr.next != null){
-			if(curr.body.equals(addBeforeThis)){
-				found = true;
-				break;
-			} else {
-				curr = curr.next;
-			}
-		}
-		if(found){
-			List<E> elementsToAdd = toAdd.getElements();
-			for(E eToAdd : elementsToAdd){
-				addBefore(eToAdd, curr);
-			}
+	public boolean addBefore(Unit where, List<Path> toInsert){
+		int index = elemList.indexOf(where);
+		if(index >= 0){
+			elemList.add(index, toInsert);
 			return true;
 		} else {
 			return false;
 		}
 	}
 	
-	private void addBefore(E e, Node n){
-		Node toAdd = new Node(e);
-		toAdd.next = n;
-		toAdd.prev = n.prev;
-		n.prev = toAdd;
-		toAdd.prev.next = toAdd;
-		size++;
+	public Unit getFirst(){
+		return (Unit) elemList.get(0);
 	}
 	
-	public void addToEnd(E e){
-		addBefore(e, tail);
-	}
-	
-	public List<E> getElements(){
-		List<E> result = new ArrayList<E>();
-		Node curr = root.next;
-		while(curr.next != null){
-			result.add(curr.body);
-			curr = curr.next;
-		}
-		return result;
-	}
-	
-	@Override
-	public String toString(){
-		String result = "Start -> ";
-		Node curr = root.next;
-		while(curr.next != null){
-			result += curr.body.toString() + " -> ";
-			curr = curr.next;
-		}
-		return result += " End";
-	}
-	
-	public Path<E> copy(){
-		Path<E> that = new Path<E>();
-		Node curr = root.next;
-		while(curr.next != null){
-			that.addToEnd(curr.body);
-			curr = curr.next;
-		}
-		return that;
-	}
-
-	@Override
-	public int size() {
-		return size;
-	}
-
-	@Override
-	public boolean isEmpty() {
-		return root.next.equals(tail);
-	}
-
-	@Override
-	public boolean contains(Object o) {
-		for(E e: getElements()){
-			if(e.equals(o)){
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	private class PathIterator implements Iterator {
+	public ArrayList<ArrayList<Unit>> getAllPaths(ArrayList<Path> dontSearch){
+		ArrayList<ArrayList<Unit>> progress = new ArrayList<>();
+		progress.add(new ArrayList<>());
 		
-		Node curr = root;
+		if(dontSearch == null){
+			dontSearch = new ArrayList<>();
+			dontSearch.add(this);
+		} else if(!dontSearch.contains(this)){
+			dontSearch.add(this);
+		}
+		
+		for(int i = 0; i < elemList.size(); i++){
+			Object next = elemList.get(i);
+			if(next instanceof Unit){
+				progress.forEach((v) -> {
+					v.add((Unit) next);
+				});
+			} else {
+				ArrayList<ArrayList<Unit>> original = new ArrayList<>(progress);
+				boolean first = true;
+				for(Path path : (List<Path>) next){
+					if(dontSearch.contains(path))
+						continue;
+					if(first){
+						progress = new ArrayList<>();
+						first = false;
+					}
+					for(ArrayList<Unit> newPath : path.getAllPaths(dontSearch)){
+						for(ArrayList<Unit> oldPath : original){
+							ArrayList<Unit> toAdd = new ArrayList<>(oldPath);
+							toAdd.addAll(newPath);
+							progress.add(toAdd);
+						}
+					}
+				}
+			}
+		}
+		
+		return progress;
+	}
+	
+	private class PathIterator implements Iterator<Object> {
+		
+		int cursor;
+		
+		public PathIterator(){
+			cursor = 0;
+		}
 
 		@Override
 		public boolean hasNext() {
-			return !curr.next.equals(tail);
+			if(cursor >= elemList.size())
+				return false;
+			return true;
 		}
 
 		@Override
 		public Object next() {
-			if(this.hasNext()){
-				curr = curr.next;
-				return curr.body;
-			}
-			throw new NoSuchElementException();
+			if(hasNext())
+				return elemList.get(cursor++);
+			else
+				return null;
 		}
 		
 	}
@@ -211,168 +127,19 @@ public class Path<E> implements List<E>, Serializable {
 	public Iterator iterator() {
 		return new PathIterator();
 	}
-
-	@Override
-	public Object[] toArray() {
-		throw new NativeMethodNotSupportedException();
-	}
-
-	@Override
-	public Object[] toArray(Object[] a) {
-		throw new NativeMethodNotSupportedException();
-	}
-
-	@Override
-	public boolean add(Object o) {
-		addToEnd((E) o);
-		return true;
-	}
-
-	public void remove(Node n){
-		n.next.prev = n.prev;
-		n.prev.next = n.next;
-	}
-	
-	@Override
-	public boolean remove(Object o) {
-		Node curr = root.next;
-		while(curr.next != null){
-			if(curr.body.equals(o)){
-				remove(curr);
-				return true;
-			}
-			curr = curr.next;
-		}
-		return false;
-	}
-
-	@Override
-	public boolean containsAll(Collection c) {
-		for(Object o: c){
-			if(!contains(o))
-				return false;
-		}
-		return true;
-	}
-
-	@Override
-	public boolean addAll(Collection c) {
-		for(Object o : c){
-			add(o);
-		}
-		return false;
-	}
-
-	@Override
-	public boolean addAll(int index, Collection<? extends E> c) {
-		throw new NativeMethodNotSupportedException();
-	}
-
-	@Override
-	public boolean removeAll(Collection<?> c) {
-		throw new NativeMethodNotSupportedException();
-	}
-
-	@Override
-	public boolean retainAll(Collection<?> c) {
-		throw new NativeMethodNotSupportedException();
-	}
-
-	@Override
-	public void clear() {
-		throw new NativeMethodNotSupportedException();
-	}
-
-	@Override
-	public E get(int index) {
-		if(index >= size)
-			throw new IndexOutOfBoundsException();
-		return getElements().get(index);
-	}
-
-	@Override
-	public E set(int index, E element) {
-		throw new NativeMethodNotSupportedException();
-	}
-
-	@Override
-	public void add(int index, E element) {
-		throw new NativeMethodNotSupportedException();
-	}
-
-	@Override
-	public E remove(int index) {
-		throw new NativeMethodNotSupportedException();
-	}
-
-	@Override
-	public int indexOf(Object o) {
-		throw new NativeMethodNotSupportedException();
-	}
-
-	@Override
-	public int lastIndexOf(Object o) {
-		throw new NativeMethodNotSupportedException();
-	}
-
-	@Override
-	public ListIterator<E> listIterator() {
-		throw new NativeMethodNotSupportedException();
-	}
-
-	@Override
-	public ListIterator<E> listIterator(int index) {
-		throw new NativeMethodNotSupportedException();
-	}
-
-	@Override
-	public List<E> subList(int fromIndex, int toIndex) {
-		throw new NativeMethodNotSupportedException();
-	}
 	
 	@Override
 	public boolean equals(Object o){
-		if(o == null || !o.getClass().equals(this.getClass())){
+		if(o == null || !o.getClass().equals(this.getClass()))
 			return false;
-		}
-		Path<E> that = (Path<E>) o;
-		if(this.size != that.size)
+		Path p = (Path) o;
+		if(p.elemList.size() != this.elemList.size())
 			return false;
-		if(this.size == 0)
-			return true;
-		Node thisNode = this.root.next;
-		Node thatNode = that.root.next;
-		while(thisNode.body != null){
-			if(thisNode.body instanceof Unit){//A common use of this class, and Unit doesn't provide its own equals
-				if(!unitEquals((Unit)thisNode.body, (Unit)thatNode.body)){
-					if(!this.toString().equals(that.toString()))
-						return false;
-				}
-			} else if(!thisNode.body.equals(thatNode.body)){
+		for(int i = 0; i < this.elemList.size(); i++){
+			if(!this.elemList.get(i).equals(p.elemList.get(i)))
 				return false;
-			}
-			thisNode = thisNode.next;
-			thatNode = thatNode.next;
 		}
 		return true;
-	}
-	
-	public static boolean unitEquals(Unit unit1, Unit unit2){
-		if(unit1 == null && unit2 == null)
-			return true;
-		if(unit1 == null || unit2 == null)
-			return false;
-		for(int i = 0; i < unit1.getTags().size(); i++){
-			if(!(unit1.getTags().get(i).getName().equals(unit2.getTags().get(i).getName()) && unit1.getTags().get(i).toString().equals(unit2.getTags().get(i).toString())))
-				return false;
-		}
-		
-		return (unit1.branches() == unit2.branches()) &&
-				(unit1.fallsThrough() == unit2.fallsThrough()) &&
-				unit1.getUseAndDefBoxes().toString().equals(unit2.getUseAndDefBoxes().toString()) &&
-				unit1.getBoxesPointingToThis().equals(unit2.getBoxesPointingToThis()) &&
-				unit1.getUnitBoxes().equals(unit2.getUnitBoxes()) &&
-				unit1.getClass().equals(unit2.getClass());
 	}
 
 }

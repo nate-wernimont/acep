@@ -26,10 +26,10 @@ public class ExtractInterMethodBig {
 			}
 			PathEnumerator pathMaker = new PathEnumerator(_class);
 			pathMaker.run();
-			HashMap<SootMethod, List<Path<Block>>> map = pathMaker.getBlockMap();
+			HashMap<SootMethod, List<List<Block>>> map = pathMaker.getBlockMap();
 			Set<SootMethod> keys = map.keySet();
 			for(SootMethod meth : keys ){
-				List<Path<Block>> pathForMeth = map.get(meth);
+				List<List<Block>> pathForMeth = map.get(meth);
 				System.out.println(meth.toString());
 				System.out.println(pathForMeth.toString());
 			}

@@ -16,6 +16,7 @@ import weka.classifiers.Classifier;
 import weka.classifiers.bayes.BayesNet;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.evaluation.Evaluation;
+import weka.classifiers.evaluation.Prediction;
 import weka.classifiers.functions.LinearRegression;
 import weka.classifiers.functions.Logistic;
 import weka.classifiers.functions.SGD;
@@ -96,6 +97,15 @@ public class FindBestClassifier {
 				System.out.println(evaluator.correct()+", "+evaluator.incorrect());
 				double[][] confusionMatrix = evaluator.confusionMatrix();
 				System.out.println(confusionMatrix[0][0]+":"+confusionMatrix[0][1]+"\n"+confusionMatrix[1][0]+":"+confusionMatrix[1][1]);
+				ArrayList<Prediction> results = evaluator.predictions();
+				int count = 0;
+				
+//				for(Prediction pred : results){
+//					if(pred.predicted() == 0){
+//						pred.
+//					}
+//				}
+				System.out.println(count);
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.out.println("Failed evaluating model");

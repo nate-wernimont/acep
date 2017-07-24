@@ -3,6 +3,7 @@ package edu.iastate.cs.design.asymptotic.machinelearning.test;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import edu.iastate.cs.design.asymptotic.annotations.ParameterScale;
 import edu.iastate.cs.design.asymptotic.machinelearning.calculation.FeatureStatistic;
@@ -27,6 +28,7 @@ public class BenchmarkExtractPaths {
 		String config = b + File.separator + "config.xml";
 		Benchmark benchmark = new Test(config);
 		ArrayList<PathEnumerator> pathExtracters = new ArrayList<>();
+		long firstTime = System.currentTimeMillis();
 		for(SootClass _class : Scene.v().getApplicationClasses()){
 			if(_class.isLibraryClass() || _class.isJavaLibraryClass() || !_class.isConcrete()){
 				continue;
@@ -35,16 +37,27 @@ public class BenchmarkExtractPaths {
 			System.out.println(_class.getName());
 		}
 		
+		List<Path> paths = new ArrayList<>();
+		
 		for(PathEnumerator pe : pathExtracters){
+			System.out.println("==="+pe.getDeclaredClass()+"===");
 			pe.run();
-			HashMap<Path<Unit>, FeatureStatistic> features = pe.getFeatureStatistics();
-			System.out.println("Paths: "+features.size());
-			for(Path<Unit> path : features.keySet()){
-				FeatureStatistic fs = features.get(path);
-				System.out.println(path);
-				System.out.println(fs);
-			}
+			paths.addAll(pe.getPaths());
+			//HashMap<Path, FeatureStatistic> features = pe.getFeatureStatistics();
+//			System.out.println("Paths: "+features.size());
+//			for(Path path : features.keySet()){
+//				FeatureStatistic fs = features.get(path);
+//				System.out.println(path);
+//				System.out.println(fs);
+//			}
 		}
+		List<List<Unit>> convertedPaths = new ArrayList<>();
+		for(Path path: paths){
+			convertedPaths.addAll(path.getAllPaths(null));
+			System.out.println(convertedPaths.size());
+		}
+		
+		System.out.println((System.currentTimeMillis()-firstTime));
 	}
 	
 }

@@ -9,6 +9,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import edu.iastate.cs.design.asymptotic.datastructures.CallGraphBuilder;
 import edu.iastate.cs.design.asymptotic.datastructures.CallGraphDFS;
 import edu.iastate.cs.design.asymptotic.datastructures.XMLParser;
 import soot.Scene;
@@ -197,13 +198,13 @@ public class Benchmark {
 		Scene.v().setMainClass(c);
 		// Important step, without which you will not be able to run spark
 		// analysis
-		//Scene.v().addBasicClass("java.io.ObjectStreamClass$MemberSignature", SootClass.HIERARCHY);
-		//Scene.v().addBasicClass("java.util.concurrent.ConcurrentHashMap$Segment", SootClass.HIERARCHY);
+//		Scene.v().addBasicClass("java.io.ObjectStreamClass$MemberSignature", SootClass.HIERARCHY);
+//		Scene.v().addBasicClass("java.util.concurrent.ConcurrentHashMap$Segment", SootClass.HIERARCHY);
 		Scene.v().loadNecessaryClasses();
 		// Spark analysis, true for brief analysis and false for full
-		//CallGraphBuilder.setSparkPointsToAnalysis(true); //   <--- UNCOMMENT
+//		CallGraphBuilder.setSparkPointsToAnalysis(true); //   <--- UNCOMMENT
 		// Create callgraph
-		//_cg = new CallGraphDFS(_sootMethod);//   <--- UNCOMMENT
+//		_cg = new CallGraphDFS(_sootMethod);//   <--- UNCOMMENT
 	}
 
 	public CallGraphDFS getCallGraph() {

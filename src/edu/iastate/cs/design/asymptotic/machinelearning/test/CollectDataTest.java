@@ -22,7 +22,7 @@ public class CollectDataTest {
 			toTest.add(Integer.parseInt(arg));
 		}
 		
-		String[] classes = {/*"lufact",*/ "series", "crypt", "sor", /*"sparsematmult"*/, "montecarlo"};
+		String[] classes = {"lufact", "series", "crypt", "sor", "sparsematmult"/*, "montecarlo"*/};
 		ArrayList<String> training_configs = new ArrayList<>();
 		ArrayList<String> test_configs = new ArrayList<>();
 		for(int i = 0; i < classes.length; i++){

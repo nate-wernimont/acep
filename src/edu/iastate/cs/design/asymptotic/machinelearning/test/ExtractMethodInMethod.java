@@ -31,10 +31,10 @@ public class ExtractMethodInMethod {
 		PathEnumerator pathE = new PathEnumerator(sClass);
 		Unit u;
 		pathE.run();
-		HashMap<SootMethod, List<Path<Unit>>> map = pathE.getUnitMap();
+		HashMap<SootMethod, List<Path>> map = pathE.getUnitMap();
 		Set<SootMethod> keys = map.keySet();
 		for(SootMethod meth : keys ){
-			List<Path<Unit>> pathForMeth = map.get(meth);
+			List<Path> pathForMeth = map.get(meth);
 			System.out.println(meth.toString());
 			System.out.println(pathForMeth.toString());
 //			System.out.println("===Block===");

@@ -33,7 +33,7 @@ public class FeatureStatistic {
 		STATEMENTS				,
 		THROW					;
 		
-		private int identifier;
+		public int identifier;
 		
 		Count(){
 			identifier = this.ordinal();
@@ -53,7 +53,7 @@ public class FeatureStatistic {
 		LOCAL_VARIABLES		,
 		PARAMETERS			;
 		
-		private int identifier;
+		public int identifier;
 		
 		Coverage(){
 			identifier = this.ordinal();

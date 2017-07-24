@@ -15,12 +15,12 @@ public class DynamicProfilerBenchmarkTest {
 			System.out.println("No benchmark supplied");
 			return;
 		}
-		String b = args[0];
+		String b = args[2];
 		String config = b + File.separator + "config.xml";
 		new Test(config);
 		
 		DynamicProfiler dp = new DynamicProfiler(Scene.v().getMainClass());
-		dp.addTransformer(Options.v().output_format_class);
-		//dp.analyzeFiles();
+		//dp.addTransformer(Options.v().output_format_class);
+		dp.analyzeFiles();
 	}
 }

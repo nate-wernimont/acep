@@ -24,14 +24,14 @@ public class ComparePaths {
 		new Test(config);
 	
 		EvaluateData ed = new EvaluateData();
-		List<Path<Unit>> possiblePaths = new ArrayList<>();
+		List<List<Unit>> possiblePaths = new ArrayList<>();
 		for(SootClass _class : Scene.v().getApplicationClasses()){
 			if(_class.isLibraryClass() || _class.isJavaLibraryClass() || !_class.isConcrete()){
 				continue;
 			}
 			PathEnumerator paths = new PathEnumerator(_class);
 			paths.run();
-			possiblePaths.addAll(paths.getPaths());
+			possiblePaths.addAll(paths.getListPaths());
 		}
 		
 		ed.collectResults("results/results_"+Scene.v().getMainClass().getShortName()+".txt", possiblePaths);

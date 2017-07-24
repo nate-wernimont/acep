@@ -4,12 +4,16 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class PrintInfo {
 	
 	public static final String DIVIDER = "~~~";
 
-	public static final String FILE_LOCATION = "/home/ganeshau/nat/";//Local: /Users/natemw/Documents/acep/profilingOutput/
+	public static final String FILE_LOCATION = "/home/nate/Documents/acep/playground/";//Local: /Users/natemw/Documents/acep/profilingOutput/
 	
 	private static final int GB = 1024*1024*1024;
 	
@@ -24,6 +28,10 @@ public class PrintInfo {
 	private static int fileCount;
 	
 	private BufferedWriter logBW;
+	
+	private static Map<String, String> uniqueStrings;
+	
+	private static BufferedWriter lookup;
 	
 	public PrintInfo(String name){
 		makeLog(name);
@@ -56,6 +64,7 @@ public class PrintInfo {
 	
 	public void log(String s){
 		try {
+			System.out.println(s);
 			logBW.write(s);
 			logBW.newLine();
 			logBW.flush();
@@ -67,6 +76,16 @@ public class PrintInfo {
 	
 	public static void makeBW(String filename){
 		if(originalName == null){
+			File f = new File(FILE_LOCATION+filename+"lookup.txt");
+			f.delete();
+			try {
+				f.createNewFile();
+				lookup = new BufferedWriter(new FileWriter(f));
+			} catch (IOException e) {
+				e.printStackTrace();
+				throw new Error("Error creating lookup file writer!");
+			}
+			uniqueStrings = new HashMap<>();
 			originalName = filename;
 			fileCount = 0;
 		}
@@ -102,7 +121,15 @@ public class PrintInfo {
 			makeBW(originalName);
 		}
 		try {
-			bw.write(s);
+			if(uniqueStrings.containsKey(s)){
+				bw.write(uniqueStrings.get(s)+System.lineSeparator());
+			} else {
+				String newLoc = ""+uniqueStrings.size();
+				uniqueStrings.put(s, newLoc);
+				bw.write(newLoc+System.lineSeparator());
+				lookup.write(s);
+				lookup.flush();
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new Error("Trying to write '"+s+"' failed");
@@ -111,6 +138,7 @@ public class PrintInfo {
 	
 	public static void close(){
 		try {
+			lookup.close();
 			bw.close();
 		} catch (IOException e) {
 			e.printStackTrace();
