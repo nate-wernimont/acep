@@ -67,9 +67,19 @@ public class Instrumenter extends BodyTransformer {
 				System.out.println(b);
 				Unit u = b.getHead();
 				while(u != null) {
-					InvokeExpr invExpr = Jimple.v().newStaticInvokeExpr(write.makeRef(), StringConstant.v(body.getMethod()+
-							PrintInfo.DIVIDER+u.toString()+
-							"\n")); 
+					InvokeExpr invExpr = null;
+					if(!u.toString().contains("PrintInfo")){
+						invExpr = Jimple.v().newStaticInvokeExpr(write.makeRef(), StringConstant.v(body.getMethod()+
+								PrintInfo.DIVIDER+u.toString()+
+								"\n")); 
+					} else if(u instanceof JIfStmt){
+						invExpr = Jimple.v().newStaticInvokeExpr(write.makeRef(), StringConstant.v(body.getMethod()+
+								PrintInfo.DIVIDER+u.toString().substring(0, u.toString().indexOf("goto"))+"goto "+
+								units.getSuccOf(((JIfStmt) u).getTarget())+
+								"\n"));
+					} else {
+						throw new Error("Didnt catch: "+u.toString()+":"+u.getClass());
+					}
 					Stmt invStmt = Jimple.v().newInvokeStmt(invExpr);
 					System.out.println("Processed a new stmt: "+body.getMethod()+": "+u.toString()+": "+b.getIndexInMethod());
 					if(u instanceof JRetStmt || u instanceof JReturnStmt || u instanceof JReturnVoidStmt){

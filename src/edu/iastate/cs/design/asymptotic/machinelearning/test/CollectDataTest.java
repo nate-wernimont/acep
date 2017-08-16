@@ -22,7 +22,7 @@ public class CollectDataTest {
 			toTest.add(Integer.parseInt(arg));
 		}
 		
-		String[] classes = {"lufact", "series", "crypt", "sor", "sparsematmult"/*, "montecarlo"*/};
+		String[] classes = {"lufact", "series", "crypt", "sor", "sparsematmult", "montecarlo", "euler", "BT"};
 		ArrayList<String> training_configs = new ArrayList<>();
 		ArrayList<String> test_configs = new ArrayList<>();
 		for(int i = 0; i < classes.length; i++){
@@ -31,9 +31,11 @@ public class CollectDataTest {
 			else
 				training_configs.add(classes[i] + File.separator + "config.xml");
 		}
+		System.out.println("Training: "+training_configs);
+		System.out.println("Eval: "+test_configs);
 		
-		Classifier classifier = new NaiveBayes();
-		EvaluateData data = new EvaluateData(training_configs, test_configs, classifier, classes[toTest.get(0)]);
-		data.run();
+		EvaluateData evaluate = new EvaluateData(training_configs, test_configs.get(0));
+		evaluate.run();
+		
 	}
 }

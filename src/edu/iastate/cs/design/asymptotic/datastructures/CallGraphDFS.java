@@ -26,9 +26,11 @@ import soot.util.dot.DotGraphNode;
 public class CallGraphDFS {
 	private SootMethod entryPoint;
 	private HashSet<String> markedMethods = new HashSet<String>();
-	private CallGraph callGraph = null;
+	public CallGraph callGraph = null;
 	private HashMap<String, List<SootMethod>> nodesMap = 
 						new HashMap<String, List<SootMethod>>();
+	
+	private HashMap<String, List<String>> nodes = new HashMap<>();
 
 	// DotGraph related
 	private int cluster_id = 0;
@@ -37,7 +39,7 @@ public class CallGraphDFS {
 	// ACEP Methods
 	List<SootMethod> acepMethods = new ArrayList<SootMethod>();
 
-	List<SootMethod> methodsAlongACEP = new ArrayList<SootMethod>();
+	public List<SootMethod> methodsAlongACEP = new ArrayList<SootMethod>();
 
 	public CallGraphDFS(SootMethod entryPoint) {
 		this.entryPoint = entryPoint;
@@ -64,7 +66,7 @@ public class CallGraphDFS {
 
 	public void drawCG(String name) {
 		if (acepMethods.size() > 0) {
-			System.out.println("[ACEP methods] not empty");
+			System.out.println("[Predicted methods] not empty");
 		}
 		dot = new DotGraph(name);
 		dot.setGraphLabel(name);
@@ -78,7 +80,7 @@ public class CallGraphDFS {
 		 * label.setAttribute("fontsize", "18"); label.setShape("box");
 		 */
 		Predicate<SootMethod> compositeConjPredicate = Filters
-				.compositeConjPredicate(Filters.noLibraryFilter(),
+				.compositeConjPredicate(
 				/*Filters.noDefaultConstructor(),*/
 						Filters.noInterfaceDefaultConstructor(),
 						Filters.noApplyDeletesMethod());
@@ -88,9 +90,11 @@ public class CallGraphDFS {
 	}
 
 	private boolean collectMethod1(SootMethod tgt,
-			Predicate<SootMethod> methodFilter) {
+			Predicate<SootMethod> methodFilter, SootMethod src) {
 		String sig = tgt.getSignature();
-		if (methodFilter.apply(tgt) && !markedMethods.contains(sig)) {
+		if(nodes.get(src.getSignature()) == null)
+			nodes.put(src.getSignature(), new ArrayList<>());
+		if (methodFilter.apply(tgt) && !nodes.get(src.getSignature()).contains(tgt.getSignature())/* && !markedMethods.contains(sig)*/) {
 			markedMethods.add(sig);
 			// list.add(tgt);
 			// Logging.trace(sig + " collected!");
@@ -124,7 +128,7 @@ public class CallGraphDFS {
 			Edge e = outEdges.next();
 			SootMethod tgt = e.tgt();
 			// TODO: Clean this up. Make one call to collect, not two.
-			if (collectMethod1(tgt, methodFilter)) {
+			if (collectMethod1(tgt, methodFilter, e.src())) {
 				// Add the target node to dotGraph
 				// DotGraph sub = dot.createSubGraph("cluster" +
 				// this.cluster_id);
@@ -135,11 +139,13 @@ public class CallGraphDFS {
 				 * label.setAttribute("fontsize", "18"); label.setShape("box");
 				 */
 
-				// Add edge from node->targetNode
-				DotGraphEdge edge = dot.drawEdge(m.getSignature(), tgt
-						.getSignature());
+				// Add edge from node->targetNod
+				nodes.get(e.src().getSignature()).add(tgt.getSignature());
+					
 				if (acepMethods.contains(m) && acepMethods.contains(tgt)
 						&& methodsAlongACEP.contains(m)) {
+					DotGraphEdge edge = dot.drawEdge(m.getSignature(), tgt
+							.getSignature());
 					System.out.println("[dotgraph] " + m.getSignature() + "--->"
 							+ tgt.getSignature());
 					edge.setStyle("bold");

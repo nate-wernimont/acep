@@ -15,7 +15,7 @@ public class DynamicProfilerBenchmarkTest {
 			System.out.println("No benchmark supplied");
 			return;
 		}
-		String b = args[2];
+		String b = args[8];
 		String config = b + File.separator + "config.xml";
 		new Test(config);
 		

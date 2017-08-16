@@ -11,6 +11,6 @@
         <lib>./sor/lib</lib>	<!-- lib folder location -->
         <jre>/usr/java/jdk1.8.0_131/jre/lib</jre>	<!-- jre location, basically this location needs to contain rt.jar and jce.jar -->
         <jars>
-                <jar>JG.jar</jar>	<!-- program jar file containing all class files to be analyzed -->
+                <jar>JG.jar</jar>	<!-- program jar file containing all class files to be analyzed --><jar>jomp.jar</jar>
         </jars>
 </benchmark>

@@ -5,5 +5,7 @@
 *.pdf
 *.jimple
 /profilingOutput/*
-sootOutput/*.class
+/sootOutput/
 /target/
+*.txt
+/playground/archive/

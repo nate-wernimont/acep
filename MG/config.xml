@@ -1,0 +1,16 @@
+<benchmark>
+        <class>NPB3_0_JAV.MG</class>	<!-- the mainclass that contains main method -->
+        <method>main</method>	<!-- the entry point method (change it if not main) -->
+        <processdir>
+                <dir>./MG</dir>	<!-- directory which contains config.xml and lib -->
+        </processdir>
+        <includes>
+                <inc>MGThreads</inc>	<!-- based on the imports in the program, if some packages have to be analyzed -->
+                <inc>BMInOut</inc>
+        </includes>
+        <lib>./MG/lib</lib>	<!-- lib folder location -->
+        <jre>/usr/java/jdk1.6.0_45/jre/lib</jre>	<!-- jre location, basically this location needs to contain rt.jar and jce.jar -->
+        <jars>
+                <jar>NPB.jar</jar>	<!-- program jar file containing all class files to be analyzed -->
+        </jars>
+</benchmark>

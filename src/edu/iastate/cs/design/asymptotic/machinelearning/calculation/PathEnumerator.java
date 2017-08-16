@@ -56,6 +56,8 @@ public class PathEnumerator {
 	
 	private boolean _debug = true;
 	
+	private static final int PATH_LIMIT = 10000;
+	
 	/**
 	 * Construct a PathEnumerator using a given class.
 	 * @param _class
@@ -103,7 +105,7 @@ public class PathEnumerator {
 	/**
 	 * Find all of the paths through the given class of this PathEnumerator
 	 */
-	public void findIntraMethodPaths(List<SootMethod> meths){
+	public void findIntraMethodPaths(List<SootMethod> meths){//TODO: Use Paths
 		for(SootMethod method : meths){
 			List<List<Block>> methodPaths = new ArrayList<List<Block>>();
 			Stack<Block> blockSt = new Stack<Block>();
@@ -123,6 +125,8 @@ public class PathEnumerator {
 	 * Generates the unit map from the block map
 	 */
 	public void blockToUnits(){
+		if(_debug)
+			System.out.println("Converting to unit paths");
 		for(SootMethod meth : _class.getMethods()){
 			List<Path> convertedList = new ArrayList<Path>();
 			for(List<Block> toConvert : block_map.get(meth)){
@@ -148,6 +152,8 @@ public class PathEnumerator {
 	 * Using the unit map, generates all of the paths through the class.
 	 */
 	private void findIntraClassPaths(){
+		if(_debug)
+			System.out.println("Converting to intraclass paths");
 		Queue<SootMethod> toDo = new LinkedBlockingQueue<SootMethod>();
 		List<Pair<Path, List<Pair<Unit, SootMethod>>>> visitedMeths = new ArrayList<>();
 		HashSet<Path> testSet = new HashSet<>();
@@ -224,54 +230,42 @@ public class PathEnumerator {
 	/**
 	 * Calculate all of the feature counts for each path
 	 */
-	public void calculateCounts(List<List<Unit>> paths, Map<List<Unit>, FeatureStatistic> featuresMap, boolean ignoreLocalInvocations){
+	public void calculateCounts(List<ListWrapper> paths){
+		if(_debug)
+			System.out.println("Calculating counts for "+paths.size()+" paths");
 		for(int i = 0; i < paths.size(); i++){
-			featuresMap.put(paths.get(i), new FeatureStatistic());
+			paths.get(i).setFS(new FeatureStatistic());
 		}
 		//Get the invocations count
 		int maxInvocations = 0;
-		for(List<Unit> path : paths){
-			FeatureStatistic feature = featuresMap.get(path);
+		for(ListWrapper path : paths){
+			FeatureStatistic feature = path.getFS();
 			int invocations = 0;
-			SootMethod initialMethod = null;
-			if(!ignoreLocalInvocations){
-				for(SootMethod sm : _class.getMethods()){
-					if(unitEquals(sm.retrieveActiveBody().getUnits().getFirst(), path.get(0))){
-						initialMethod = sm;
-						break;
-					}
-				}
-			}
-			for(Unit unit : path){
+			for(Unit unit : path.getList()){
 				if(methodInvocationBool(unit)){
 					invocations++;
 					feature.increment(Count.INVOCATIONS);
-					if(!ignoreLocalInvocations){
-						Predicate<PatchingChain<Unit>> local = (v) -> {
-							for(Unit u : v){
-								if(u.equals(unit)){
-									return true;
-								}
+					Predicate<PatchingChain<Unit>> local = (v) -> {
+						for(Unit u : v){
+							if(u.equals(unit)){
+								return true;
 							}
-							return false;
-						};
-						if(local.test((initialMethod.retrieveActiveBody().getUnits()))){
-							feature.increment(Count.LOCAL_INVOCATIONS);
-						} else {
-							feature.increment(Count.NON_LOCAL_INVOCATIONS);
 						}
+						return false;
+					};
+					if(local.test((path.getMeth().retrieveActiveBody().getUnits()))){
+						feature.increment(Count.LOCAL_INVOCATIONS);
 					} else {
 						feature.increment(Count.NON_LOCAL_INVOCATIONS);
 					}
 				}
 			}
-			featuresMap.put(path, feature);
 			maxInvocations = invocations > maxInvocations ? invocations : maxInvocations;
 		}
 		
 		//Get the invocations coverages
-		for(List<Unit> path : paths){
-			FeatureStatistic feature = featuresMap.get(path);
+		for(ListWrapper path : paths){
+			FeatureStatistic feature = path.getFS();
 			feature.setValue(Coverage.INVOCATIONS, (float)(feature.getValue(Count.INVOCATIONS)/maxInvocations));
 		}
 		
@@ -281,18 +275,18 @@ public class PathEnumerator {
 		int maxParametersUsed = 0;
 		int debugCount = 0;
 		
-		for(List<Unit> path : paths){
+		for(ListWrapper path : paths){
 			debugCount++;
 			if(debugCount % 1000 == 0){
 				System.out.println("Finished finding "+debugCount+" statistics");
 			}
 			
-			FeatureStatistic feature = featuresMap.get(path);
-			if(feature == null)
-				feature = new FeatureStatistic();
+			SootClass pathClass = path.getMeth().getDeclaringClass();
+			
+			FeatureStatistic feature = path.getFS();
 			Set<Value> localVariables = new HashSet<Value>();
 			Set<Value> allVariables = new HashSet<Value>();
-			for(Unit unit : path){
+			for(Unit unit : path.getList()){
 				feature.increment(Count.STATEMENTS);
 				switch(unit.getClass().getSimpleName()){
 				case "JAssignStmt":
@@ -404,7 +398,7 @@ public class PathEnumerator {
 			feature.increment(Count.ALL_VARIABLES, allVariables.size());
 			feature.increment(Count.LOCAL_VARIABLES, localVariables.size());
 			
-			Iterator<SootField> fieldsWrittenIter = _class.getFields().snapshotIterator();
+			Iterator<SootField> fieldsWrittenIter = pathClass.getFields().snapshotIterator();
 			Set<SootField> fields = new HashSet<SootField>();
 			while(fieldsWrittenIter.hasNext()){
 				SootField eval = fieldsWrittenIter.next();
@@ -415,7 +409,7 @@ public class PathEnumerator {
 					}
 				}
 			}
-			feature.setValue(Coverage.FIELDS, (float)fields.size()/_class.getFieldCount());
+			feature.setValue(Coverage.FIELDS, (float)fields.size()/pathClass.getFieldCount());
 			feature.increment(Count.FIELDS, fields.size());
 			
 			if(feature.getValue(Count.FIELDS_WRITTEN) > maxFieldsWritten)
@@ -424,13 +418,11 @@ public class PathEnumerator {
 				maxVariablesAccessed = feature.getValue(Count.LOCAL_VARIABLES);
 			if(feature.getValue(Count.PARAMETERS) > maxParametersUsed)
 				maxParametersUsed = feature.getValue(Count.PARAMETERS);
-			
-			featuresMap.put(path, feature);
 		}
 		
 		//coverage
-		for(List<Unit> path : paths){
-			FeatureStatistic feature = featuresMap.get(path);
+		for(ListWrapper path : paths){
+			FeatureStatistic feature = path.getFS();
 			feature.setValue(Coverage.FIELDS_WRITTEN, maxFieldsWritten > 0 ? (float)(feature.getValue(Count.FIELDS_WRITTEN)/maxFieldsWritten) : 0);
 			feature.setValue(Coverage.LOCAL_VARIABLES, maxVariablesAccessed > 0 ? (float)(feature.getValue(Count.LOCAL_VARIABLES)/maxVariablesAccessed) : 0);
 			feature.setValue(Coverage.PARAMETERS, maxParametersUsed > 0 ? (float)(feature.getValue(Count.PARAMETERS)/maxParametersUsed) : 0);
@@ -487,6 +479,11 @@ public class PathEnumerator {
 	}
 	
 	private void DFSwithStarter(Stack<Block> blockStack, List<List<Block>> methodPaths, Block startBlock, Block dontTravel){
+		if(methodPaths.size() > PATH_LIMIT){
+			if(_debug)
+				System.out.println("Hit limit ["+PATH_LIMIT+"]");
+			return;
+		}
 		List<Block> succs = startBlock.getSuccs();
 		if(succs.isEmpty()){//It is an exit node
 			List<Block> pathToAdd = new ArrayList<Block>(blockStack);
@@ -562,6 +559,22 @@ public class PathEnumerator {
 		for(Path path: getPaths()){
 			convertedPaths.addAll(path.getAllPaths(null));
 			//System.out.println(convertedPaths.size());
+		}
+		return convertedPaths;
+	}
+	
+	public List<ListWrapper> getWrappedPaths(){
+		if(_debug)
+			System.out.println("Getting paths");
+		List<ListWrapper> convertedPaths = new ArrayList<>();
+		for(SootMethod sm : _class.getMethods()){
+			for(Path path : unit_map.get(sm)){
+				if(_debug)
+					System.out.println(sm.getName());
+				for(ArrayList<Unit> list : path.getAllPaths(null)){
+					convertedPaths.add(new ListWrapper(list, false, null, sm, 0, null));
+				}
+			}
 		}
 		return convertedPaths;
 	}

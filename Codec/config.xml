@@ -1,0 +1,15 @@
+<benchmark>
+        <class>org.Test</class>	<!-- the mainclass that contains main method -->
+        <method>main</method>	<!-- the entry point method (change it if not main) -->
+        <processdir>
+                <dir>./Codec</dir>	<!-- directory which contains config.xml and lib -->
+        </processdir>
+        <includes>
+                <inc>org</inc>	<!-- based on the imports in the program, if some packages have to be analyzed -->
+        </includes>
+        <lib>./Codec/lib</lib>	<!-- lib folder location -->
+        <jre>/Library/Java/JavaVirtualMachines/1.6.0_29-b11-397.jdk/Contents/Home/jre/lib</jre>	<!-- jre location, basically this location needs to contain rt.jar and jce.jar -->
+        <jars>
+                <jar>Codec.jar</jar>	<!-- program jar file containing all class files to be analyzed -->
+        </jars>
+</benchmark>

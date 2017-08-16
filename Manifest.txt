@@ -1,1 +1,2 @@
-Main-Class: JGFMonteCarloBenchSizeA
+Main-Class: JGFEulerBenchSizeA
+Class-Path: Jomp.jar

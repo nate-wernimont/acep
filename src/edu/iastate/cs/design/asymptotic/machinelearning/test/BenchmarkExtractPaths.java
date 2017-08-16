@@ -9,6 +9,7 @@ import edu.iastate.cs.design.asymptotic.annotations.ParameterScale;
 import edu.iastate.cs.design.asymptotic.machinelearning.calculation.FeatureStatistic;
 import edu.iastate.cs.design.asymptotic.machinelearning.calculation.FeatureStatistic.Count;
 import edu.iastate.cs.design.asymptotic.machinelearning.calculation.FeatureStatistic.Coverage;
+import edu.iastate.cs.design.asymptotic.machinelearning.calculation.ListWrapper;
 import edu.iastate.cs.design.asymptotic.machinelearning.calculation.Path;
 import edu.iastate.cs.design.asymptotic.machinelearning.calculation.PathEnumerator;
 import edu.iastate.cs.design.asymptotic.tests.benchmarks.Benchmark;
@@ -39,10 +40,13 @@ public class BenchmarkExtractPaths {
 		
 		List<Path> paths = new ArrayList<>();
 		
+		List<ListWrapper> lists = new ArrayList<>(); 
+		
 		for(PathEnumerator pe : pathExtracters){
 			System.out.println("==="+pe.getDeclaredClass()+"===");
 			pe.run();
 			paths.addAll(pe.getPaths());
+			lists.addAll(pe.getWrappedPaths());
 			//HashMap<Path, FeatureStatistic> features = pe.getFeatureStatistics();
 //			System.out.println("Paths: "+features.size());
 //			for(Path path : features.keySet()){
@@ -56,6 +60,8 @@ public class BenchmarkExtractPaths {
 			convertedPaths.addAll(path.getAllPaths(null));
 			System.out.println(convertedPaths.size());
 		}
+		
+		System.out.println(lists.size()+"=============");
 		
 		System.out.println((System.currentTimeMillis()-firstTime));
 	}

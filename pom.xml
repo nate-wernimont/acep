@@ -55,7 +55,7 @@
               <transformers>
                  <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                     <manifestEntries>
-                       <Main-Class>edu.iastate.cs.design.asymptotic.machinelearning.test.DynamicProfilerBenchmarkTest</Main-Class>
+                       <Main-Class>edu.iastate.cs.design.asymptotic.machinelearning.test.CollectDataTest</Main-Class>
                     </manifestEntries>
                  </transformer>
               </transformers>

@@ -23,7 +23,7 @@ public class ComparePaths {
 		String config = b + File.separator + "config.xml";
 		new Test(config);
 	
-		EvaluateData ed = new EvaluateData();
+		//EvaluateData ed = new EvaluateData();
 		List<List<Unit>> possiblePaths = new ArrayList<>();
 		for(SootClass _class : Scene.v().getApplicationClasses()){
 			if(_class.isLibraryClass() || _class.isJavaLibraryClass() || !_class.isConcrete()){
@@ -34,7 +34,6 @@ public class ComparePaths {
 			possiblePaths.addAll(paths.getListPaths());
 		}
 		
-		ed.collectResults("results/results_"+Scene.v().getMainClass().getShortName()+".txt", possiblePaths);
 	}
 
 }

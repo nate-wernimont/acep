@@ -1,14 +1,18 @@
 package edu.iastate.cs.design.asymptotic.tests.benchmarks;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.iastate.cs.design.asymptotic.datastructures.CallGraphBuilder;
 import edu.iastate.cs.design.asymptotic.datastructures.CallGraphDFS;
 import edu.iastate.cs.design.asymptotic.interfaces.impl.StaticProfilePassImpl;
 
 import soot.Scene;
 import soot.SootClass;
 import soot.SootMethod;
+import soot.jimple.toolkits.callgraph.CallGraph;
+import soot.options.Options;
 import soot.util.Chain;
 
 public class Test extends Benchmark {
@@ -20,14 +24,18 @@ public class Test extends Benchmark {
 	
 	public Test () {
 		super(_config);
-		prepareSoot();
+		prepareSoot(true);
 		//display();
 	}
 	
-	public Test (String config) {
+	public Test(String config){
+		this(config, true);
+	}
+	
+	public Test (String config, boolean callgraph) {
 		super(config);
 		_config = config;
-		prepareSoot();
+		prepareSoot(callgraph);
 		//display();
 	}
 	

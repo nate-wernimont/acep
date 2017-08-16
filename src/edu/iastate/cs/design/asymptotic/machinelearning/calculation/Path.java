@@ -75,23 +75,25 @@ public class Path implements Iterable, Serializable {
 					v.add((Unit) next);
 				});
 			} else {
-				ArrayList<ArrayList<Unit>> original = new ArrayList<>(progress);
-				boolean first = true;
-				for(Path path : (List<Path>) next){
+				int originalSize = progress.size();
+				List<Path> castedNext;
+				if(((List<Path>) next).size() > 2){
+					castedNext = ((List<Path>) next).subList(0, 2);
+				} else {
+					castedNext = (List<Path>) next;
+				}
+				for(Path path : castedNext){
 					if(dontSearch.contains(path))
 						continue;
-					if(first){
-						progress = new ArrayList<>();
-						first = false;
-					}
 					for(ArrayList<Unit> newPath : path.getAllPaths(dontSearch)){
-						for(ArrayList<Unit> oldPath : original){
-							ArrayList<Unit> toAdd = new ArrayList<>(oldPath);
+						for(int j = 0; j < originalSize; j++){
+							ArrayList<Unit> toAdd = new ArrayList<>(progress.get(j));
 							toAdd.addAll(newPath);
 							progress.add(toAdd);
 						}
 					}
 				}
+				System.out.println("Path count: "+progress.size());
 			}
 		}
 		

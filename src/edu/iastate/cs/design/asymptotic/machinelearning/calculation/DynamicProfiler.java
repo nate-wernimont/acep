@@ -53,7 +53,7 @@ public class DynamicProfiler {
 	
 	private PrintInfo _logger;
 	
-	private ArrayList<Pair<ArrayList<Unit>, Integer>> _pathCounts;
+	private ArrayList<ListWrapper> _pathCounts;
 	
 	private int _fileNumber;
 	
@@ -162,14 +162,16 @@ public class DynamicProfiler {
 		Unit lastUnit = null;
 		
 		String line = currLine;
-
+		
+		SootMethod thisMeth = lookupTable.get(Integer.parseInt(line)).first();
+		SootMethod meth = thisMeth;
 		Supplier<String> newLine = () -> {
 			String freshLine = null;
 			try {
 				if((freshLine = _reader.readLine()) == null){
 					newFile();
 					if((freshLine = _reader.readLine()) == null){
-						finished(currPath, loopedSegments);
+						finished(currPath, loopedSegments, thisMeth);
 					}
 				}
 			} catch (IOException e) {
@@ -178,9 +180,6 @@ public class DynamicProfiler {
 			}
 			return freshLine;
 		};
-		
-		SootMethod thisMeth = lookupTable.get(Integer.parseInt(line)).first();
-		SootMethod meth = thisMeth;
 		mainLoop:
 		while(line != null){
 			Pair<SootMethod, Object> pair = lookupTable.get(Integer.parseInt(line));
@@ -209,7 +208,7 @@ public class DynamicProfiler {
 				if(lastUnit instanceof JReturnStmt || lastUnit instanceof JReturnVoidStmt || lastUnit instanceof JRetStmt){
 					if(!thisMeth.getDeclaringClass().equals(meth.getDeclaringClass())){
 						//Path ends, go back to last path we were making
-						addPath(currPath, loopedSegments);
+						addPath(currPath, loopedSegments, thisMeth);
 						return line;
 					}
 				} else if(!meth.getDeclaringClass().equals(thisMeth.getDeclaringClass())){
@@ -258,30 +257,30 @@ public class DynamicProfiler {
 	
 	private boolean finished = false;
 	
-	private void finished(ArrayList<Unit> currPath, Map<Unit, Set<ArrayList<Unit>>> loopedSegments){
+	private void finished(ArrayList<Unit> currPath, Map<Unit, Set<ArrayList<Unit>>> loopedSegments, SootMethod meth){
 		if(finished)
 			throw new Error("Already finished");
 		finished = true;
 		_logger.log("["+_class.getShortName()+"] Finished");
-		addPath(currPath, loopedSegments);
+		addPath(currPath, loopedSegments, meth);
 	}
 	
-	private void addPath(ArrayList<Unit> currPath, Map<Unit, Set<ArrayList<Unit>>> loopedSegments) {
+	private void addPath(ArrayList<Unit> currPath, Map<Unit, Set<ArrayList<Unit>>> loopedSegments, SootMethod meth) {
 		Set<ArrayList<Unit>> paths = getPaths(currPath, loopedSegments);
 		for(ArrayList<Unit> path : paths){
 			boolean inMap = false;
 			int location;
 			for(location = 0; location < _pathCounts.size(); location++){
-				if(_pathCounts.get(location).first().equals(path)){
+				if(_pathCounts.get(location).getList().equals(path)){
 					inMap = true;
 					break;
 				}
 			}
 			if(inMap){
-				_pathCounts.get(location).setSecond(new Integer(_pathCounts.get(location).second()+1));
+				_pathCounts.get(location).incrementCount();
 			} else {
 				//logger.log("["+originalName+"] Found a new path");
-				_pathCounts.add(new Pair<ArrayList<Unit>, Integer>(currPath, new Integer(1)));
+				_pathCounts.add(new ListWrapper(path, false, null, meth, 1, null));
 			}
 		}
 	}
@@ -296,11 +295,8 @@ public class DynamicProfiler {
 				Unit loopHeader = iter.next();
 				if(unit.equals(loopHeader)){
 					ArrayList<ArrayList<Unit>> originalPaths = new ArrayList<>(result);
-					result = new ArrayList<>();
 					for(ArrayList<Unit> originalPath : originalPaths){
 						for(ArrayList<Unit> loopedPath : loopedSegments.get(loopHeader)){
-//							if(loopedPath.equals(path))
-//								continue;
 							Set<ArrayList<Unit>> loopedLoopedPaths = getPaths(loopedPath.subList(1, loopedPath.size()-1), loopedSegments);
 							for(ArrayList<Unit> loopedLoopedPath : loopedLoopedPaths){
 								ArrayList<Unit> toAdd = new ArrayList<>(originalPath);
@@ -397,10 +393,10 @@ public class DynamicProfiler {
 	 * @param _pathCounts2 The paths to analyze
 	 * @return The unit count of all of the paths
 	 */
-	private int pathSize(ArrayList<Pair<ArrayList<Unit>, Integer>> _pathCounts2){
+	private int pathSize(ArrayList<ListWrapper> _pathCounts2){
 		int total = 0;
-		for(Pair<ArrayList<Unit>, Integer> p : _pathCounts2){
-			total += p.first().size();
+		for(ListWrapper p : _pathCounts2){
+			total += p.getList().size();
 		}
 		return total;
 	}
@@ -410,10 +406,10 @@ public class DynamicProfiler {
 	 * @param _pathCounts2 The paths to analyze
 	 * @return The total amount of times these paths have been walked over
 	 */
-	private int traversedPaths(ArrayList<Pair<ArrayList<Unit>, Integer>>  _pathCounts2){
+	private int traversedPaths(ArrayList<ListWrapper>  _pathCounts2){
 		int total = 0;
-		for(Pair<ArrayList<Unit>, Integer> p : _pathCounts2){
-			total += p.second().intValue();
+		for(ListWrapper p : _pathCounts2){
+			total += p.getCount();
 		}
 		return total;
 	}
